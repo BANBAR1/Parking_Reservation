@@ -21,3 +21,4 @@ class Building_builder():
     def amount_of_special_parking_spaces(self):
     
         return self.parking_lot.get_special_parking_space_amount()
+    a = 1
