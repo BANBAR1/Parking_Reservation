@@ -16,4 +16,3 @@ class Parking_lot:
     
     def get_special_parking_space_amount(self):
             return self._special_parking_space_amount
-    a = 1
