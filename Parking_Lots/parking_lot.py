@@ -12,7 +12,7 @@ class Parking_lot:
         return self._parking_space_amount
     
     def get_normal_parking_space_amount(self):
-            return self._normal_parking_space_amount
+        return self._normal_parking_space_amount
     
     def get_special_parking_space_amount(self):
-            return self._special_parking_space_amount
+        return self._special_parking_space_amount
