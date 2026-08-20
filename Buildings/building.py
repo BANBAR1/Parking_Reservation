@@ -6,7 +6,6 @@ class Building_builder():
 
         self.parking_lot = Parking_lot(normal_parking_space_amount, special_parking_space_amount)
 
-
     @property
     def general_amount_of_parking_spaces(self):
 
