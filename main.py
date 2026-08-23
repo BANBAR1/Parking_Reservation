@@ -1,4 +1,4 @@
-from Buildings.building import BuildingBuilder
+from Models.building import BuildingBuilder
 
 
 Building = BuildingBuilder(4, 9)
