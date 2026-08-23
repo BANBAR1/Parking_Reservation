@@ -1,7 +1,7 @@
-from Buildings.building import Building_builder
+from Models.building import BuildingBuilder
 
 
-Building = Building_builder(4,9)
+Building = BuildingBuilder(4, 9)
 
 
 print(Building.general_amount_of_parking_spaces)
