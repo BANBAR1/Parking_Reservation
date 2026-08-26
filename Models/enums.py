@@ -9,11 +9,13 @@ class SpotType(Enum):
     MANAGEMENT = "FOR_MANAGEMENT"
     GENERAL = "GENERAL"
 
+
 class SpotStatus(Enum):
     AVAILABLE = "AVAILABLE"
     OCCUPIED = "OCCUPIED"
     RESERVED = "RESERVED"
     OUT_OF_SERVICE = "OUT_OF_SERVICE"
+
 
 class LotStatus(Enum):
     OPEN = "OPEN"
@@ -21,9 +23,11 @@ class LotStatus(Enum):
     FULL = "FULL"
     UNDER_MAINTENANCE = "UNDER_MAINTENANCE"
 
+
 class LotType(Enum):
     PUBLIC = "PUBLIC"
     PRIVATE = "PRIVATE"
+
 
 class LocationType(Enum):
     MALL = "MALL"
