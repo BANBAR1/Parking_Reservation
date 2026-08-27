@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Models.enums import LocationType
+from models.enums import LocationType
 
 
 @dataclass

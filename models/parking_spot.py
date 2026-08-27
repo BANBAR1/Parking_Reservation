@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Models.enums import SpotStatus, SpotType
+from models.enums import SpotStatus, SpotType
 
 
 @dataclass
