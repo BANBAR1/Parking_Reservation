@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Models.enums import LotStatus, LotType
+from models.enums import LotStatus, LotType
 
 
 @dataclass
