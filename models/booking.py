@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from models.vehicle import Vehicle
 from models.parking_spot import ParkingSpot
+from models.vehicle import Vehicle
 
 
 @dataclass
@@ -12,7 +12,6 @@ class Booking:
     start_time: datetime
     end_time: datetime
     rate_at_booking: float = field(init=False)
-
 
     def __post_init__(self) -> None:
         if self.end_time <= self.start_time:
