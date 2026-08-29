@@ -9,7 +9,7 @@ from models.vehicle import Vehicle
 
 def main() -> None:
     driver = Driver(name="Andrii")
-    vehicle = Vehicle(license_plate="WZ12345", vehicle_driver=driver)
+    vehicle = Vehicle(license_plate="WZ12345", driver=driver)
     spot = ParkingSpot(number=12, status=SpotStatus.AVAILABLE, type=SpotType.DISABLED)
 
     booking = Booking(
