@@ -4,10 +4,12 @@ from models.booking import Booking
 from models.driver import Driver
 from models.enums import SpotStatus, SpotType
 from models.parking_spot import ParkingSpot
+from models.vehicle import Vehicle
 
 
 def main() -> None:
-    driver = Driver(name="Andrii", license_plate="WZ12345")
+    driver = Driver(name="Andrii")
+    vehicle = Vehicle(license_plate="WZ12345", vehicle_driver=driver)
     spot = ParkingSpot(
         number=12,
         status=SpotStatus.AVAILABLE,
@@ -17,7 +19,7 @@ def main() -> None:
 
     booking = Booking(
         spot=spot,
-        driver=driver,
+        vehicle=vehicle,
         start_time=datetime(2026, 9, 1, 9, 0),
         end_time=datetime(2026, 9, 1, 12, 30),
     )
