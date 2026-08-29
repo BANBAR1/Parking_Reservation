@@ -8,3 +8,4 @@ class ParkingSpot:
     number: int
     status: SpotStatus
     type: SpotType
+    hourly_rate: float = 2.50
