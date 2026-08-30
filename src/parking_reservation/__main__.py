@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from models.booking import Booking
-from models.driver import Driver
-from models.enums import SpotStatus, SpotType
-from models.parking_spot import ParkingSpot
-from models.vehicle import Vehicle
+from parking_reservation.models.booking import Booking
+from parking_reservation.models.driver import Driver
+from parking_reservation.models.enums import SpotStatus, SpotType
+from parking_reservation.models.parking_spot import ParkingSpot
+from parking_reservation.models.vehicle import Vehicle
 
 
 def main() -> None:
