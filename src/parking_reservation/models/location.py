@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from models.enums import LocationType
+from parking_reservation.models.enums import LocationType
 
 
 @dataclass

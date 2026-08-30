@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from models.driver import Driver
+from parking_reservation.models.driver import Driver
 
 
 @dataclass

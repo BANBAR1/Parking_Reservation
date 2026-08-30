@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from models.enums import SpotStatus, SpotType
+from parking_reservation.models.enums import SpotStatus, SpotType
 
 
 @dataclass
