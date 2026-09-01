@@ -7,10 +7,6 @@ name = "parking-reservation"
 version = "0.1.0"
 requires-python = ">=3.12"
 
-[tool.black]
-line-length = 100
-target-version = ["py312"]
-
 [tool.ruff]
 line-length = 100
 target-version = "py312"
@@ -20,7 +16,6 @@ select = ["E", "F", "I", "UP"]
 
 [dependency-groups]
 dev = [
-    "black>=26.5.1",
     "pytest>=9.1.1",
     "ruff>=0.16.5",
 ]
