@@ -3,7 +3,7 @@ from datetime import datetime
 import pytest
 
 from parking_reservation.models.booking import Booking
-from parking_reservation.models.enums import DEFAULT_HOURLY_RATES, SpotStatus, SpotType
+from parking_reservation.models.enums import SpotStatus, SpotType
 from parking_reservation.models.parking_spot import ParkingSpot
 
 
@@ -24,7 +24,7 @@ def test_total_cost_for_a_general_spot(vehicle):
 def test_booking_rejects_backwards_time_range(vehicle):
     spot = ParkingSpot(number=12, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="end_time"):
         Booking(
             spot=spot,
             vehicle=vehicle,
@@ -42,8 +42,18 @@ def test_booking_rejects_backwards_time_range(vehicle):
         (SpotType.WORKERS, 0.00),
     ],
 )
-def test_cost_follows_the_spot_type(spot_type, expected_cost):
-    assert DEFAULT_HOURLY_RATES[spot_type] * 2 == pytest.approx(expected_cost)
+
+def test_cost_follows_the_spot_type(vehicle, spot_type, expected_cost):
+    spot = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=spot_type)
+
+    booking = Booking(
+        spot=spot,
+        vehicle=vehicle,
+        start_time=datetime(2026, 9, 1, 9, 0),
+        end_time=datetime(2026, 9, 1, 11, 0),
+    )
+
+    assert booking.total_cost() == pytest.approx(expected_cost)
 
 
 def test_short_stay_on_an_ev_spot(vehicle):
