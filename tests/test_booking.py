@@ -1,4 +1,3 @@
-import time
 from datetime import datetime
 
 import pytest
@@ -6,17 +5,6 @@ import pytest
 from parking_reservation.models.booking import Booking
 from parking_reservation.models.enums import SpotStatus, SpotType
 from parking_reservation.models.parking_spot import ParkingSpot
-
-
-@pytest.mark.parametrize("seconds", [5, 10, 15, 20, 30])
-def test_workflow_delay(seconds):
-    """
-    Intentionally delays execution by `seconds`.
-    Runs once per value in the parametrize list, so total
-    workflow runtime ≈ sum of all listed delays.
-    """
-    time.sleep(seconds)
-    assert True
 
 
 def test_total_cost_for_a_general_spot(vehicle):
