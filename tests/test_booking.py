@@ -42,7 +42,6 @@ def test_booking_rejects_backwards_time_range(vehicle):
         (SpotType.WORKERS, 0.00),
     ],
 )
-
 def test_cost_follows_the_spot_type(vehicle, spot_type, expected_cost):
     spot = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=spot_type)
 
