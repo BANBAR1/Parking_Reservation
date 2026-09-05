@@ -23,4 +23,4 @@ class Booking:
         return (self.end_time - self.start_time).total_seconds() / 3600
 
     def total_cost(self) -> float:
-        return self.duration_hours() * self.hourly_rate * 0
+        return self.duration_hours() * self.hourly_rate
