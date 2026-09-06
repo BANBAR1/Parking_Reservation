@@ -2,22 +2,12 @@ from enum import Enum
 
 
 class SpotType(Enum):
-    DISABLED = "FOR_DISABLED"
-    WORKERS = "FOR_WORKERS"
-    VISITORS = "FOR_VISITORS"
-    ELECTRIC_VEHICLES = "FOR_ELECTRIC_VEHICLES"
-    MANAGEMENT = "FOR_MANAGEMENT"
+    DISABLED = "DISABLED"
+    WORKERS = "WORKERS"
+    VISITORS = "VISITORS"
+    ELECTRIC_VEHICLES = "ELECTRIC_VEHICLES"
+    MANAGEMENT = "MANAGEMENT"
     GENERAL = "GENERAL"
-
-
-DEFAULT_HOURLY_RATES: dict[SpotType, float] = {
-    SpotType.GENERAL: 2.50,
-    SpotType.DISABLED: 1.00,
-    SpotType.ELECTRIC_VEHICLES: 3.50,
-    SpotType.MANAGEMENT: 0.0,
-    SpotType.WORKERS: 0.0,
-    SpotType.VISITORS: 0.0,
-}
 
 
 class SpotStatus(Enum):

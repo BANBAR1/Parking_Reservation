@@ -7,4 +7,4 @@ from parking_reservation.models.enums import LocationType
 class Location:
     type: LocationType
     address: str
-    name: str | None
+    name: str | None = None
