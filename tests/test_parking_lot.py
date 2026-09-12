@@ -11,9 +11,11 @@ from parking_reservation.models.location import Location
 from parking_reservation.models.parking_lot import ParkingLot
 from parking_reservation.models.parking_spot import ParkingSpot
 
+
 @pytest.fixture
 def location():
     return Location(type=LocationType.RESIDENTIAL, address="Oslo")
+
 
 def test_newly_built_lot_has_empty_spots_list(location):
     lot = ParkingLot(number=1, status=LotStatus.OPEN, type=LotType.PUBLIC, location=location)
