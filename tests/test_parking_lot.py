@@ -25,7 +25,7 @@ def test_newly_built_lot_has_empty_spots_list(location):
 def test_lot_keeps_the_spots_it_was_built_with(location):
     spot = ParkingSpot(number=1, status=SpotStatus.OCCUPIED, type=SpotType.MANAGEMENT)
 
-    lot1 = ParkingLot(
+    lot = ParkingLot(
         number=1,
         status=LotStatus.OPEN,
         type=LotType.PUBLIC,
@@ -33,15 +33,7 @@ def test_lot_keeps_the_spots_it_was_built_with(location):
         spots=[spot],
     )
 
-    lot2 = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-    )
-
-    assert lot1.spots == [spot]
-    assert lot2.spots == []
+    assert lot.spots == [spot]
 
 
 def test_lots_save_spots_with_right_count(location):
