@@ -59,3 +59,83 @@ def test_lots_dont_share_spots(location):
     lot1.spots.append(ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL))
 
     assert lot2.spots == []
+
+
+def test_lot_with_available_and_occupied_spots_is_not_full(location):
+    spot1 = ParkingSpot(number=1, status=SpotStatus.OCCUPIED, type=SpotType.GENERAL)
+    spot2 = ParkingSpot(number=2, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot1, spot2],
+    )
+
+    assert not lot.is_full
+    assert lot.available_spots == [spot2]
+
+
+def test_lot_with_occupied_spots_is_full(location):
+    spot1 = ParkingSpot(number=1, status=SpotStatus.OCCUPIED, type=SpotType.GENERAL)
+    spot2 = ParkingSpot(number=2, status=SpotStatus.OCCUPIED, type=SpotType.GENERAL)
+
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot1, spot2],
+    )
+
+    assert lot.is_full
+    assert lot.available_spots == []
+
+
+def test_empty_lot_is_not_full(location):
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+    )
+
+    assert not lot.is_full
+
+
+def test_lot_full_state_flips(location):
+    spot1 = ParkingSpot(number=1, status=SpotStatus.OCCUPIED, type=SpotType.GENERAL)
+    spot2 = ParkingSpot(number=2, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot1, spot2],
+    )
+
+    assert not lot.is_full
+
+    spot2.status = SpotStatus.OCCUPIED
+
+    assert lot.is_full
+
+
+@pytest.mark.parametrize(
+    "status",
+    [SpotStatus.RESERVED, SpotStatus.OUT_OF_SERVICE],
+)
+def test_non_available_spot_counts_toward_full(status, location):
+    spot = ParkingSpot(number=1, status=status, type=SpotType.GENERAL)
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot],
+    )
+
+    assert lot.available_spots == []
+    assert lot.is_full

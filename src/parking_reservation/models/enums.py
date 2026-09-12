@@ -20,7 +20,6 @@ class SpotStatus(Enum):
 class LotStatus(Enum):
     OPEN = "OPEN"
     CLOSED = "CLOSED"
-    FULL = "FULL"
     UNDER_MAINTENANCE = "UNDER_MAINTENANCE"
 
 
