@@ -8,3 +8,4 @@ class ParkingSpot:
     number: int
     status: SpotStatus
     type: SpotType
+    floor: int | None = None
