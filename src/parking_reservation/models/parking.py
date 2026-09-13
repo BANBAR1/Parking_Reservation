@@ -26,6 +26,21 @@ class ParkingSpot:
     floor: int | None = None
 
 
+class LocationType(Enum):
+    MALL = "MALL"
+    OFFICE = "OFFICE"
+    AIRPORT = "AIRPORT"
+    HOSPITAL = "HOSPITAL"
+    RESIDENTIAL = "RESIDENTIAL"
+
+
+@dataclass
+class Location:
+    type: LocationType
+    address: str
+    name: str | None = None
+
+
 class LotStatus(Enum):
     OPEN = "OPEN"
     CLOSED = "CLOSED"
@@ -52,18 +67,3 @@ class ParkingLot:
     @property
     def is_full(self) -> bool:
         return bool(self.spots) and not self.available_spots
-
-
-class LocationType(Enum):
-    MALL = "MALL"
-    OFFICE = "OFFICE"
-    AIRPORT = "AIRPORT"
-    HOSPITAL = "HOSPITAL"
-    RESIDENTIAL = "RESIDENTIAL"
-
-
-@dataclass
-class Location:
-    type: LocationType
-    address: str
-    name: str | None = None
