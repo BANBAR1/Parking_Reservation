@@ -1,9 +1,19 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from parking_reservation.models.parking_spot import ParkingSpot
-from parking_reservation.models.vehicle import Vehicle
+from parking_reservation.models.parking import ParkingSpot
 from parking_reservation.pricing import DEFAULT_HOURLY_RATES
+
+
+@dataclass
+class Driver:
+    name: str
+
+
+@dataclass
+class Vehicle:
+    license_plate: str
+    driver: Driver
 
 
 @dataclass

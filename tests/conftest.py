@@ -1,7 +1,6 @@
 import pytest
 
-from parking_reservation.models.driver import Driver
-from parking_reservation.models.vehicle import Vehicle
+from parking_reservation.models import Driver, Vehicle
 
 
 @pytest.fixture

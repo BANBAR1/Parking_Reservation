@@ -1,4 +1,4 @@
-from parking_reservation.models.enums import SpotType
+from parking_reservation.models.parking import SpotType
 
 DEFAULT_HOURLY_RATES: dict[SpotType, float] = {
     SpotType.GENERAL: 2.50,

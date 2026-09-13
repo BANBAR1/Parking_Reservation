@@ -1,18 +1,18 @@
 from datetime import datetime
 
-from parking_reservation.models.booking import Booking
-from parking_reservation.models.driver import Driver
-from parking_reservation.models.enums import (
+from parking_reservation.models import (
+    Booking,
+    Driver,
+    Location,
     LocationType,
     LotStatus,
     LotType,
+    ParkingLot,
+    ParkingSpot,
     SpotStatus,
     SpotType,
+    Vehicle,
 )
-from parking_reservation.models.location import Location
-from parking_reservation.models.parking_lot import ParkingLot
-from parking_reservation.models.parking_spot import ParkingSpot
-from parking_reservation.models.vehicle import Vehicle
 
 
 def main() -> None:
