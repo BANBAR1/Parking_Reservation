@@ -2,9 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from parking_reservation.models.booking import Booking
-from parking_reservation.models.enums import SpotStatus, SpotType
-from parking_reservation.models.parking_spot import ParkingSpot
+from parking_reservation.models import Booking, ParkingSpot, SpotStatus, SpotType
 
 
 def test_total_cost_for_a_general_spot(vehicle):

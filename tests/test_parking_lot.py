@@ -1,15 +1,15 @@
 import pytest
 
-from parking_reservation.models.enums import (
+from parking_reservation.models import (
+    Location,
     LocationType,
     LotStatus,
     LotType,
+    ParkingLot,
+    ParkingSpot,
     SpotStatus,
     SpotType,
 )
-from parking_reservation.models.location import Location
-from parking_reservation.models.parking_lot import ParkingLot
-from parking_reservation.models.parking_spot import ParkingSpot
 
 
 @pytest.fixture
