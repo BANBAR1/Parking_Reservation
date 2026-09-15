@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from parking_reservation.models import (
-    Booking,
     Driver,
     Location,
     LocationType,
@@ -13,6 +12,7 @@ from parking_reservation.models import (
     SpotType,
     Vehicle,
 )
+from parking_reservation.reservation import ReservationService
 
 
 def main() -> None:
@@ -35,22 +35,23 @@ def main() -> None:
         spots=[spot1, spot2, spot3, spot4],
     )
 
-    booking = Booking(
-        spot=spot1,
+    service = ReservationService()
+
+    print(f"Before reservation: {spot1.status}")
+    booking = service.reserve(
+        lot=lot,
         vehicle=vehicle,
         start_time=datetime(2026, 9, 1, 9, 0),
         end_time=datetime(2026, 9, 1, 12, 30),
     )
 
-    print(lot.spots[0].type)
-    print(lot.spots[1].type)
-    print(lot.spots[2].number)
-    print(lot.spots[1].status)
-    print(lot.location)
-    print(lot.type)
-    print(booking)
+    print(f"Reserved booking: {booking}")
+    print(f"After reservation: {spot1.status}")
     print(f"Duration: {booking.duration_hours()} h")
     print(f"Cost: {booking.total_cost():.2f}")
+
+    service.cancel(booking)
+    print(f"After cancellation: {spot1.status}")
 
 
 if __name__ == "__main__":
