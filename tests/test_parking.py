@@ -1,8 +1,6 @@
 import pytest
 
 from parking_reservation.models import (
-    Location,
-    LocationType,
     LotStatus,
     LotType,
     ParkingLot,
@@ -10,11 +8,6 @@ from parking_reservation.models import (
     SpotStatus,
     SpotType,
 )
-
-
-@pytest.fixture
-def location():
-    return Location(type=LocationType.RESIDENTIAL, address="Oslo")
 
 
 def test_newly_built_lot_has_empty_spots_list(location):
