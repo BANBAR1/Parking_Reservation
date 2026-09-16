@@ -11,10 +11,11 @@ class ReservationService:
     def reserve(
         self, lot: ParkingLot, vehicle: Vehicle, start_time: datetime, end_time: datetime
     ) -> Booking:
-        if not lot.available_spots:
+        spots = lot.available_spots
+        if not spots:
             raise ValueError(f"No available spots in lot number: {lot.number}")
 
-        spot = lot.available_spots[0]
+        spot = spots[0]
         booking = Booking(spot=spot, vehicle=vehicle, start_time=start_time, end_time=end_time)
 
         spot.status = SpotStatus.RESERVED
@@ -31,4 +32,4 @@ class ReservationService:
                 self.bookings.pop(index)
                 return
 
-        raise ValueError(f"Booking number: {booking.spot.number} is not available")
+        raise ValueError(f"Booking for spot {booking.spot.number} was not made by this service")
