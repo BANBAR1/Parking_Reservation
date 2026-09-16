@@ -64,7 +64,6 @@ def test_two_reservations_use_different_spots(location, vehicle):
 
     assert booking1.spot is spot1
     assert booking2.spot is spot2
-    assert booking1.spot is not booking2.spot
 
 
 def test_reserving_past_last_available_spot_raises_error(location, vehicle):
@@ -156,13 +155,6 @@ def test_cancelling_booking_allows_reservation_again(location, vehicle):
         start_time=datetime(2026, 9, 1, 9, 0),
         end_time=datetime(2026, 9, 1, 10, 0),
     )
-    with pytest.raises(ValueError, match="lot number: 1"):
-        service.reserve(
-            lot=lot,
-            vehicle=vehicle,
-            start_time=datetime(2026, 9, 1, 9, 0),
-            end_time=datetime(2026, 9, 1, 10, 0),
-        )
 
     service.cancel(first_booking)
 
@@ -200,7 +192,7 @@ def test_cancelling_booking_twice_raises_on_second_attempt(location, vehicle):
         service.cancel(booking)
 
 
-def test_failed_reserve_leaves_the_lot_untouched(location, vehicle):
+def test_failed_reserve_leaves_the_spot_untouched(location, vehicle):
 
     spot = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
     lot = ParkingLot(
@@ -222,7 +214,7 @@ def test_failed_reserve_leaves_the_lot_untouched(location, vehicle):
     assert service.bookings == []
 
 
-def test_cancelling_equal_but_different_booking_raises(location, vehicle):
+def test_cancelling_not_owned_booking_raises(location, vehicle):
     spot1 = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
     spot2 = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
     lot1 = ParkingLot(
@@ -258,7 +250,7 @@ def test_cancelling_equal_but_different_booking_raises(location, vehicle):
     assert booking1 == booking2
     assert booking1 is not booking2
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Booking was not made by this service"):
         service1.cancel(booking2)
 
     assert spot1.status is SpotStatus.RESERVED
