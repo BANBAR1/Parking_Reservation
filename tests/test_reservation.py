@@ -188,7 +188,7 @@ def test_cancelling_booking_twice_raises_on_second_attempt(location, vehicle):
         end_time=datetime(2026, 9, 1, 10, 0),
     )
     service.cancel(booking)
-    with pytest.raises(ValueError, match="Booking for spot 1"):
+    with pytest.raises(ValueError, match="Booking was not found"):
         service.cancel(booking)
 
 
@@ -250,7 +250,7 @@ def test_cancelling_not_owned_booking_raises(location, vehicle):
     assert booking1 == booking2
     assert booking1 is not booking2
 
-    with pytest.raises(ValueError, match="Booking was not made by this service"):
+    with pytest.raises(ValueError, match="Booking was not found"):
         service1.cancel(booking2)
 
     assert spot1.status is SpotStatus.RESERVED

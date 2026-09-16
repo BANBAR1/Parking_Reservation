@@ -32,4 +32,4 @@ class ReservationService:
                 self.bookings.pop(index)
                 return
 
-        raise ValueError("Booking was not made by this service")
+        raise ValueError("Booking was not found")
