@@ -12,7 +12,7 @@ from parking_reservation.models import (
     SpotType,
     Vehicle,
 )
-from parking_reservation.reservation import ReservationService
+from parking_reservation.reservation import BookingRequest, ReservationService
 
 
 def main() -> None:
@@ -24,34 +24,49 @@ def main() -> None:
         status=SpotStatus.OUT_OF_SERVICE,
         type=SpotType.ELECTRIC_VEHICLES,
     )
-    spot3 = ParkingSpot(number=7, status=SpotStatus.RESERVED, type=SpotType.MANAGEMENT)
-    spot4 = ParkingSpot(number=1, status=SpotStatus.OCCUPIED, type=SpotType.GENERAL)
+    spot3 = ParkingSpot(number=7, status=SpotStatus.AVAILABLE, type=SpotType.MANAGEMENT)
     location = Location(type=LocationType.RESIDENTIAL, address="Washington")
     lot = ParkingLot(
         number=32,
         status=LotStatus.OPEN,
         type=LotType.PUBLIC,
         location=location,
-        spots=[spot1, spot2, spot3, spot4],
+        spots=[spot1, spot2, spot3],
     )
 
     service = ReservationService()
+    start_time = datetime(2026, 9, 20, 9, 0)
+    end_time = datetime(2026, 9, 20, 12, 30)
 
-    print(f"Before reservation: {spot1.status}")
     booking = service.reserve(
-        lot=lot,
-        vehicle=vehicle,
-        start_time=datetime(2026, 9, 1, 9, 0),
-        end_time=datetime(2026, 9, 1, 12, 30),
+        BookingRequest(
+            lot=lot,
+            spot=spot1,
+            vehicle=vehicle,
+            start_time=start_time,
+            end_time=end_time,
+        )
     )
 
-    print(f"Reserved booking: {booking}")
-    print(f"After reservation: {spot1.status}")
-    print(f"Duration: {booking.duration_hours()} h")
+    print(f"Created booking for spot {booking.spot.number}")
+    print(f"Duration: {booking.duration_hours():.1f} h")
     print(f"Cost: {booking.total_cost():.2f}")
 
+    try:
+        service.reserve(
+            BookingRequest(
+                lot=lot,
+                spot=spot1,
+                vehicle=vehicle,
+                start_time=datetime(2026, 9, 20, 11, 0),
+                end_time=datetime(2026, 9, 20, 13, 0),
+            )
+        )
+    except ValueError as error:
+        print(f"Overlapping booking rejected: {error}")
+
     service.cancel(booking)
-    print(f"After cancellation: {spot1.status}")
+    print(f"Bookings after cancellation: {len(service.bookings)}")
 
 
 if __name__ == "__main__":

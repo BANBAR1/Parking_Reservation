@@ -1,5 +1,3 @@
-import pytest
-
 from parking_reservation.models import (
     LotStatus,
     LotType,
@@ -16,7 +14,7 @@ def test_newly_built_lot_has_empty_spots_list(location):
 
 
 def test_lot_keeps_the_spots_it_was_built_with(location):
-    spot = ParkingSpot(number=1, status=SpotStatus.OCCUPIED, type=SpotType.MANAGEMENT)
+    spot = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.MANAGEMENT)
 
     lot = ParkingLot(
         number=1,
@@ -29,8 +27,8 @@ def test_lot_keeps_the_spots_it_was_built_with(location):
     assert lot.spots == [spot]
 
 
-def test_lots_save_spots_with_right_count(location):
-    spot1 = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+def test_lots_save_spots_with_right_count(location, spot):
+    spot1 = spot
     spot2 = ParkingSpot(number=2, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
     spot3 = ParkingSpot(number=3, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
 
@@ -54,8 +52,8 @@ def test_lots_dont_share_spots(location):
     assert lot2.spots == []
 
 
-def test_lot_with_available_and_occupied_spots_is_not_full(location):
-    spot1 = ParkingSpot(number=1, status=SpotStatus.OCCUPIED, type=SpotType.GENERAL)
+def test_lot_with_available_and_unavailable_spots_is_not_full(location):
+    spot1 = ParkingSpot(number=1, status=SpotStatus.OUT_OF_SERVICE, type=SpotType.GENERAL)
     spot2 = ParkingSpot(number=2, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
 
     lot = ParkingLot(
@@ -70,9 +68,9 @@ def test_lot_with_available_and_occupied_spots_is_not_full(location):
     assert lot.available_spots == [spot2]
 
 
-def test_lot_with_occupied_spots_is_full(location):
-    spot1 = ParkingSpot(number=1, status=SpotStatus.OCCUPIED, type=SpotType.GENERAL)
-    spot2 = ParkingSpot(number=2, status=SpotStatus.OCCUPIED, type=SpotType.GENERAL)
+def test_lot_with_unavailable_spots_is_full(location):
+    spot1 = ParkingSpot(number=1, status=SpotStatus.OUT_OF_SERVICE, type=SpotType.GENERAL)
+    spot2 = ParkingSpot(number=2, status=SpotStatus.OUT_OF_SERVICE, type=SpotType.GENERAL)
 
     lot = ParkingLot(
         number=1,
@@ -98,7 +96,7 @@ def test_empty_lot_is_not_full(location):
 
 
 def test_lot_full_state_flips(location):
-    spot1 = ParkingSpot(number=1, status=SpotStatus.OCCUPIED, type=SpotType.GENERAL)
+    spot1 = ParkingSpot(number=1, status=SpotStatus.OUT_OF_SERVICE, type=SpotType.GENERAL)
     spot2 = ParkingSpot(number=2, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
 
     lot = ParkingLot(
@@ -111,17 +109,13 @@ def test_lot_full_state_flips(location):
 
     assert not lot.is_full
 
-    spot2.status = SpotStatus.OCCUPIED
+    spot2.status = SpotStatus.OUT_OF_SERVICE
 
     assert lot.is_full
 
 
-@pytest.mark.parametrize(
-    "status",
-    [SpotStatus.RESERVED, SpotStatus.OUT_OF_SERVICE],
-)
-def test_non_available_spot_counts_toward_full(status, location):
-    spot = ParkingSpot(number=1, status=status, type=SpotType.GENERAL)
+def test_non_available_spot_counts_toward_full(location):
+    spot = ParkingSpot(number=1, status=SpotStatus.OUT_OF_SERVICE, type=SpotType.GENERAL)
     lot = ParkingLot(
         number=1,
         status=LotStatus.OPEN,
