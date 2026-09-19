@@ -37,7 +37,7 @@ class ReservationService:
 
     def cancel(self, booking: Booking) -> None:
 
-        for index, held_booking in enumerate(self._active_bookings()):
+        for index, held_booking in enumerate(self.bookings):
             if held_booking is booking:
                 self.bookings.pop(index)
                 return
@@ -50,7 +50,7 @@ class ReservationService:
         start_time = request.start_time
         end_time = request.end_time
         date_now = datetime.now()
-        matched_bookings = [booking for booking in self._active_bookings() if spot is booking.spot]
+        matched_bookings = [booking for booking in self.bookings if spot is booking.spot]
 
         if not any(lot_spot is spot for lot_spot in lot.available_spots):
             return False
@@ -66,7 +66,3 @@ class ReservationService:
                 return False
 
         return True
-
-    def _active_bookings(self) -> list[Booking]:
-
-        return [booking for booking in self.bookings if booking.end_time > datetime.now()]

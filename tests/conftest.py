@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import pytest
 
 from parking_reservation.models import (
@@ -28,3 +30,8 @@ def spot():
         status=SpotStatus.AVAILABLE,
         type=SpotType.GENERAL,
     )
+
+
+@pytest.fixture
+def date_tomorrow():
+    return datetime.now().replace(minute=0, second=0, microsecond=0) + timedelta(days=1)
