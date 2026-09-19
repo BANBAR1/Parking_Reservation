@@ -502,6 +502,7 @@ def test_reserving_out_of_service_spot_is_rejected(location, vehicle, spot, date
 
     assert service.bookings == []
 
+
 def test_reserving_in_the_past_is_rejected(location, vehicle, spot, date_tomorrow):
     lot = ParkingLot(
         number=1,
@@ -516,7 +517,9 @@ def test_reserving_in_the_past_is_rejected(location, vehicle, spot, date_tomorro
     with pytest.raises(ValueError, match="Request is not valid"):
         service.reserve(
             request(
-                lot, spot, vehicle,
+                lot,
+                spot,
+                vehicle,
                 yesterday.replace(hour=9),
                 yesterday.replace(hour=10),
             )
