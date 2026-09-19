@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from parking_reservation.models.parking import ParkingSpot
+from parking_reservation.models.parking import ParkingLot, ParkingSpot
 from parking_reservation.pricing import DEFAULT_HOURLY_RATES
 
 
@@ -18,6 +18,7 @@ class Vehicle:
 
 @dataclass
 class Booking:
+    lot: ParkingLot
     spot: ParkingSpot
     vehicle: Vehicle
     start_time: datetime

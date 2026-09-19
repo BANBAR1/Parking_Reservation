@@ -2,13 +2,32 @@ from datetime import datetime
 
 import pytest
 
-from parking_reservation.models import Booking, ParkingSpot, SpotStatus, SpotType
+from parking_reservation.models import (
+    Booking,
+    LotStatus,
+    LotType,
+    ParkingLot,
+    ParkingSpot,
+    SpotStatus,
+    SpotType,
+)
 
 
-def test_total_cost_for_a_general_spot(vehicle):
+def make_lot(location, spot):
+    return ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot],
+    )
+
+
+def test_total_cost_for_a_general_spot(location, vehicle):
     spot = ParkingSpot(number=12, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
 
     booking = Booking(
+        lot=make_lot(location, spot),
         spot=spot,
         vehicle=vehicle,
         start_time=datetime(2026, 9, 1, 9, 0),
@@ -19,11 +38,12 @@ def test_total_cost_for_a_general_spot(vehicle):
     assert booking.total_cost() == pytest.approx(8.75)
 
 
-def test_booking_rejects_backwards_time_range(vehicle):
+def test_booking_rejects_backwards_time_range(location, vehicle):
     spot = ParkingSpot(number=12, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
 
     with pytest.raises(ValueError, match="end_time"):
         Booking(
+            lot=make_lot(location, spot),
             spot=spot,
             vehicle=vehicle,
             start_time=datetime(2026, 9, 1, 12, 0),
@@ -40,10 +60,11 @@ def test_booking_rejects_backwards_time_range(vehicle):
         (SpotType.WORKERS, 0.00),
     ],
 )
-def test_cost_follows_the_spot_type(vehicle, spot_type, expected_cost):
+def test_cost_follows_the_spot_type(location, vehicle, spot_type, expected_cost):
     spot = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=spot_type)
 
     booking = Booking(
+        lot=make_lot(location, spot),
         spot=spot,
         vehicle=vehicle,
         start_time=datetime(2026, 9, 1, 9, 0),
@@ -53,9 +74,10 @@ def test_cost_follows_the_spot_type(vehicle, spot_type, expected_cost):
     assert booking.total_cost() == pytest.approx(expected_cost)
 
 
-def test_short_stay_on_an_ev_spot(vehicle):
+def test_short_stay_on_an_ev_spot(location, vehicle):
     spot = ParkingSpot(number=7, status=SpotStatus.AVAILABLE, type=SpotType.ELECTRIC_VEHICLES)
     booking = Booking(
+        lot=make_lot(location, spot),
         spot=spot,
         vehicle=vehicle,
         start_time=datetime(2026, 9, 1, 9, 0),
