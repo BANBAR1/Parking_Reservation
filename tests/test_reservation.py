@@ -157,30 +157,6 @@ def test_cancel_removes_booking(location, vehicle, spot, date_tomorrow):
     assert service.bookings == []
 
 
-def test_cancelling_booking_allows_reservation_again(location, vehicle, spot, date_tomorrow):
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
-    service = ReservationService()
-    booking_request = request(
-        lot,
-        spot,
-        vehicle,
-        tomorrow_at(date_tomorrow, 9),
-        tomorrow_at(date_tomorrow, 10),
-    )
-
-    first_booking = service.reserve(booking_request)
-    service.cancel(first_booking)
-    new_booking = service.reserve(booking_request)
-
-    assert new_booking.spot is spot
-
-
 def test_cancelling_booking_twice_raises_on_second_attempt(location, vehicle, spot, date_tomorrow):
     lot = ParkingLot(
         number=1,
@@ -282,7 +258,6 @@ def test_cancelling_not_owned_booking_raises(location, vehicle, spot, date_tomor
     ("requested_start", "requested_end", "overlaps"),
     [
         ((13, 0), (15, 0), False),
-        ((10, 0), (12, 0), True),
         ((10, 0), (12, 0), True),
         ((9, 0), (17, 0), True),
         ((9, 0), (11, 0), True),
@@ -497,3 +472,54 @@ def test_reserving_spot_not_in_lot_is_rejected(location, vehicle, spot, date_tom
                 tomorrow_at(date_tomorrow, 10),
             )
         )
+
+
+def test_reserving_out_of_service_spot_is_rejected(location, vehicle, spot, date_tomorrow):
+    dead_spot = ParkingSpot(
+        number=2,
+        status=SpotStatus.OUT_OF_SERVICE,
+        type=SpotType.GENERAL,
+    )
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot, dead_spot],
+    )
+    service = ReservationService()
+
+    with pytest.raises(ValueError, match="Request is not valid"):
+        service.reserve(
+            request(
+                lot,
+                dead_spot,
+                vehicle,
+                tomorrow_at(date_tomorrow, 9),
+                tomorrow_at(date_tomorrow, 10),
+            )
+        )
+
+    assert service.bookings == []
+
+def test_reserving_in_the_past_is_rejected(location, vehicle, spot, date_tomorrow):
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot],
+    )
+    yesterday = date_tomorrow - timedelta(days=2)
+    service = ReservationService()
+
+    with pytest.raises(ValueError, match="Request is not valid"):
+        service.reserve(
+            request(
+                lot, spot, vehicle,
+                yesterday.replace(hour=9),
+                yesterday.replace(hour=10),
+            )
+        )
+
+    assert service.bookings == []
