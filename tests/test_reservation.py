@@ -202,7 +202,7 @@ def test_cancelling_booking_twice_raises_on_second_attempt(location, vehicle, sp
         service.cancel(booking)
 
 
-def test_failed_reserve_leaves_the_spot_untouched(location, vehicle, spot):
+def test_failed_reserve_doesnt_creates_booking(location, vehicle, spot):
     lot = ParkingLot(
         number=1,
         status=LotStatus.OPEN,
@@ -212,7 +212,7 @@ def test_failed_reserve_leaves_the_spot_untouched(location, vehicle, spot):
     )
     service = ReservationService()
 
-    with pytest.raises(ValueError, match="end_time must be after start_time"):
+    with pytest.raises(ValueError, match="Request is not valid"):
         service.reserve(
             request(
                 lot,
@@ -461,3 +461,30 @@ def test_cancelling_booking_makes_its_hours_bookable_again(location, vehicle, sp
     replacement = service.reserve(booking_request)
 
     assert replacement.spot is booking.spot
+
+
+def test_reserving_spot_not_in_lot_is_rejected(location, vehicle, spot):
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot],
+    )
+    foreign_spot = ParkingSpot(
+        number=2,
+        status=SpotStatus.AVAILABLE,
+        type=SpotType.GENERAL,
+    )
+    service = ReservationService()
+
+    with pytest.raises(ValueError, match="Request is not valid"):
+        service.reserve(
+            request(
+                lot,
+                foreign_spot,
+                vehicle,
+                datetime(2026, 9, 20, 9, 0),
+                datetime(2026, 9, 20, 10, 0),
+            )
+        )

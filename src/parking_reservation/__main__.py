@@ -37,16 +37,15 @@ def main() -> None:
     service = ReservationService()
     start_time = datetime(2026, 9, 20, 9, 0)
     end_time = datetime(2026, 9, 20, 12, 30)
-
-    booking = service.reserve(
-        BookingRequest(
-            lot=lot,
-            spot=spot1,
-            vehicle=vehicle,
-            start_time=start_time,
-            end_time=end_time,
-        )
+    booking_request = BookingRequest(
+        lot=lot,
+        spot=spot1,
+        vehicle=vehicle,
+        start_time=start_time,
+        end_time=end_time,
     )
+
+    booking = service.reserve(booking_request)
 
     print(f"Created booking for spot {booking.spot.number}")
     print(f"Duration: {booking.duration_hours():.1f} h")
