@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from parking_reservation.errors import ReservationError
 from parking_reservation.models import (
     Driver,
     Location,
@@ -35,8 +36,8 @@ def main() -> None:
     )
 
     service = ReservationService()
-    start_time = datetime(2026, 9, 20, 9, 0)
-    end_time = datetime(2026, 9, 20, 12, 30)
+    start_time = datetime(2127, 9, 20, 9, 0)
+    end_time = datetime(2127, 9, 20, 12, 30)
     booking_request = BookingRequest(
         lot=lot,
         spot=spot1,
@@ -57,11 +58,11 @@ def main() -> None:
                 lot=lot,
                 spot=spot1,
                 vehicle=vehicle,
-                start_time=datetime(2026, 9, 20, 11, 0),
-                end_time=datetime(2026, 9, 20, 13, 0),
+                start_time=datetime(2127, 9, 20, 11, 0),
+                end_time=datetime(2127, 9, 20, 13, 0),
             )
         )
-    except ValueError as error:
+    except ReservationError as error:
         print(f"Overlapping booking rejected: {error}")
 
     service.cancel(booking)
