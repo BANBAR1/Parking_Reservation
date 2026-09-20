@@ -38,19 +38,6 @@ def test_total_cost_for_a_general_spot(location, vehicle):
     assert booking.total_cost() == pytest.approx(8.75)
 
 
-def test_booking_rejects_backwards_time_range(location, vehicle):
-    spot = ParkingSpot(number=12, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
-
-    with pytest.raises(ValueError, match="end_time"):
-        Booking(
-            lot=make_lot(location, spot),
-            spot=spot,
-            vehicle=vehicle,
-            start_time=datetime(2026, 9, 1, 12, 0),
-            end_time=datetime(2026, 9, 1, 9, 0),
-        )
-
-
 @pytest.mark.parametrize(
     "spot_type, expected_cost",
     [

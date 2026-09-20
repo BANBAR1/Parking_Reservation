@@ -26,8 +26,6 @@ class Booking:
     hourly_rate: float = field(init=False)
 
     def __post_init__(self) -> None:
-        if self.end_time <= self.start_time:
-            raise ValueError("end_time must be after start_time")
         self.hourly_rate = DEFAULT_HOURLY_RATES[self.spot.type]
 
     def duration_hours(self) -> float:

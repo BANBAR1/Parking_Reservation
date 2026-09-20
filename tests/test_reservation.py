@@ -2,6 +2,15 @@ from datetime import datetime, timedelta
 
 import pytest
 
+from parking_reservation.errors import (
+    BookingNotFoundError,
+    BookingTimeInPastError,
+    ReservationError,
+    ReversedBookingTimeError,
+    SpotAlreadyBookedError,
+    SpotIsNotInGivenLotError,
+    SpotOutOfServiceError,
+)
 from parking_reservation.models import (
     LotStatus,
     LotType,
@@ -25,6 +34,11 @@ def request(lot, spot, vehicle, start_time, end_time):
 
 def tomorrow_at(date_tomorrow, hour, minute=0):
     return date_tomorrow.replace(hour=hour, minute=minute)
+
+
+def test_reservation_error_catches_specific_error():
+    with pytest.raises(ReservationError):
+        raise SpotOutOfServiceError
 
 
 def test_reserving_free_spot_returns_reserved_booking(location, vehicle, spot, date_tomorrow):
@@ -107,7 +121,7 @@ def test_reserving_past_last_available_spot_raises_error(location, vehicle, spot
 
     service.reserve(booking_request)
 
-    with pytest.raises(ValueError, match="Request is not valid"):
+    with pytest.raises(SpotAlreadyBookedError):
         service.reserve(booking_request)
 
 
@@ -121,7 +135,7 @@ def test_empty_lot_is_not_full_but_reservation_raises(location, vehicle, spot, d
     assert not lot.is_full
 
     service = ReservationService()
-    with pytest.raises(ValueError, match="Request is not valid"):
+    with pytest.raises(SpotIsNotInGivenLotError):
         service.reserve(
             request(
                 lot,
@@ -178,7 +192,7 @@ def test_cancelling_booking_twice_raises_on_second_attempt(location, vehicle, sp
     )
     service.cancel(booking)
 
-    with pytest.raises(ValueError, match="Booking was not found"):
+    with pytest.raises(BookingNotFoundError):
         service.cancel(booking)
 
 
@@ -192,7 +206,7 @@ def test_failed_reserve_doesnt_creates_booking(location, vehicle, spot, date_tom
     )
     service = ReservationService()
 
-    with pytest.raises(ValueError, match="Request is not valid"):
+    with pytest.raises(ReversedBookingTimeError):
         service.reserve(
             request(
                 lot,
@@ -247,7 +261,7 @@ def test_cancelling_not_owned_booking_raises(location, vehicle, spot, date_tomor
 
     assert booking1 is not booking2
 
-    with pytest.raises(ValueError, match="Booking was not found"):
+    with pytest.raises(BookingNotFoundError):
         service1.cancel(booking2)
 
     assert service1.bookings == [booking1]
@@ -294,7 +308,7 @@ def test_booking_overlap_cases(
     requested_end = tomorrow_at(date_tomorrow, *requested_end)
 
     if overlaps:
-        with pytest.raises(ValueError, match="Request is not valid"):
+        with pytest.raises(SpotAlreadyBookedError):
             service.reserve(request(lot, spot, vehicle, requested_start, requested_end))
     else:
         booking = service.reserve(request(lot, spot, vehicle, requested_start, requested_end))
@@ -320,7 +334,7 @@ def test_booking_wholly_inside_existing_booking_is_rejected(location, vehicle, s
         )
     )
 
-    with pytest.raises(ValueError, match="Request is not valid"):
+    with pytest.raises(SpotAlreadyBookedError):
         service.reserve(
             request(
                 lot,
@@ -351,7 +365,7 @@ def test_booking_containing_existing_booking_is_rejected(location, vehicle, spot
         )
     )
 
-    with pytest.raises(ValueError, match="Request is not valid"):
+    with pytest.raises(SpotAlreadyBookedError):
         service.reserve(
             request(
                 lot,
@@ -462,7 +476,7 @@ def test_reserving_spot_not_in_lot_is_rejected(location, vehicle, spot, date_tom
     )
     service = ReservationService()
 
-    with pytest.raises(ValueError, match="Request is not valid"):
+    with pytest.raises(SpotIsNotInGivenLotError):
         service.reserve(
             request(
                 lot,
@@ -489,7 +503,7 @@ def test_reserving_out_of_service_spot_is_rejected(location, vehicle, spot, date
     )
     service = ReservationService()
 
-    with pytest.raises(ValueError, match="Request is not valid"):
+    with pytest.raises(SpotOutOfServiceError):
         service.reserve(
             request(
                 lot,
@@ -514,7 +528,7 @@ def test_reserving_in_the_past_is_rejected(location, vehicle, spot, date_tomorro
     yesterday = date_tomorrow - timedelta(days=2)
     service = ReservationService()
 
-    with pytest.raises(ValueError, match="Request is not valid"):
+    with pytest.raises(BookingTimeInPastError):
         service.reserve(
             request(
                 lot,
