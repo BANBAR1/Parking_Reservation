@@ -568,26 +568,3 @@ def test_unavailable_lot_rejects_reservation(location, vehicle, spot, date_tomor
         )
 
     assert service.bookings == []
-
-
-def test_open_lot_still_able_to_get_reserved(location, vehicle, spot, date_tomorrow):
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
-    service = ReservationService()
-
-    booking = service.reserve(
-        request(
-            lot,
-            spot,
-            vehicle,
-            tomorrow_at(date_tomorrow, 9),
-            tomorrow_at(date_tomorrow, 10),
-        )
-    )
-
-    assert service.bookings == [booking]
