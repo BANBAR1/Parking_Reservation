@@ -5,6 +5,7 @@ import pytest
 from parking_reservation.errors import (
     BookingNotFoundError,
     BookingTimeInPastError,
+    LotIsNotOpenError,
     ReservationError,
     ReversedBookingTimeError,
     SpotAlreadyBookedError,
@@ -20,6 +21,8 @@ from parking_reservation.models import (
     SpotType,
 )
 from parking_reservation.reservation import BookingRequest, ReservationService
+
+CLOSED_STATUSES = [status for status in LotStatus if status is not LotStatus.OPEN]
 
 
 def request(lot, spot, vehicle, start_time, end_time):
@@ -536,6 +539,31 @@ def test_reserving_in_the_past_is_rejected(location, vehicle, spot, date_tomorro
                 vehicle,
                 yesterday.replace(hour=9),
                 yesterday.replace(hour=10),
+            )
+        )
+
+    assert service.bookings == []
+
+
+@pytest.mark.parametrize("closed_status", CLOSED_STATUSES)
+def test_unavailable_lot_rejects_reservation(location, vehicle, spot, date_tomorrow, closed_status):
+    lot = ParkingLot(
+        number=1,
+        status=closed_status,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot],
+    )
+    service = ReservationService()
+
+    with pytest.raises(LotIsNotOpenError):
+        service.reserve(
+            request(
+                lot,
+                spot,
+                vehicle,
+                tomorrow_at(date_tomorrow, 9),
+                tomorrow_at(date_tomorrow, 10),
             )
         )
 
