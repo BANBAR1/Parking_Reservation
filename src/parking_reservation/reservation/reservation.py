@@ -4,12 +4,13 @@ from datetime import datetime
 from parking_reservation.errors import (
     BookingNotFoundError,
     BookingTimeInPastError,
+    LotIsNotOpenError,
     ReversedBookingTimeError,
     SpotAlreadyBookedError,
     SpotIsNotInGivenLotError,
     SpotOutOfServiceError,
 )
-from parking_reservation.models import Booking, ParkingLot, ParkingSpot, Vehicle
+from parking_reservation.models import Booking, LotStatus, ParkingLot, ParkingSpot, Vehicle
 
 
 @dataclass
@@ -58,17 +59,20 @@ class ReservationService:
         end_time = request.end_time
         date_now = datetime.now()
 
-        if end_time <= start_time:
-            raise ReversedBookingTimeError
-
-        if start_time < date_now:
-            raise BookingTimeInPastError
+        if lot.status is not LotStatus.OPEN:
+            raise LotIsNotOpenError
 
         if not any(lot_spot is spot for lot_spot in lot.spots):
             raise SpotIsNotInGivenLotError
 
         if not any(available_spot is spot for available_spot in lot.available_spots):
             raise SpotOutOfServiceError
+
+        if end_time <= start_time:
+            raise ReversedBookingTimeError
+
+        if start_time < date_now:
+            raise BookingTimeInPastError
 
         matched_bookings = [booking for booking in self.bookings if spot is booking.spot]
 

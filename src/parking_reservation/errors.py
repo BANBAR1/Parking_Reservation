@@ -27,3 +27,7 @@ class BookingNotFoundError(ReservationError):
 
 class SpotIsNotInGivenLotError(ReservationError):
     message = "Wanted spot is not in given lot"
+
+
+class LotIsNotOpenError(ReservationError):
+    message = "Wanted lot is not open"
