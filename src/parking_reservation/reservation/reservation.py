@@ -33,7 +33,7 @@ class ReservationService:
         start_time = request.start_time
         end_time = request.end_time
 
-        self._is_request_valid(request)
+        self._validate_request(request)
         booking = Booking(
             lot=lot, spot=spot, vehicle=vehicle, start_time=start_time, end_time=end_time
         )
@@ -51,7 +51,7 @@ class ReservationService:
 
         raise BookingNotFoundError
 
-    def _is_request_valid(self, request: BookingRequest) -> None:
+    def _validate_request(self, request: BookingRequest) -> None:
         lot = request.lot
         spot = request.spot
         start_time = request.start_time
