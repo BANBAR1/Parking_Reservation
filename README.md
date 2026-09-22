@@ -13,6 +13,7 @@ A learning project: a small Python app for modeling parking reservations (spots,
 
 ```bash
 uv sync
+uv run pre-commit install
 ```
 
 ## Run
