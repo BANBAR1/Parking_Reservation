@@ -16,6 +16,7 @@ class Vehicle:
     driver: Driver
 
 
+
 @dataclass
 class Booking:
     lot: ParkingLot
