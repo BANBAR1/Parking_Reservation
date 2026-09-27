@@ -1,3 +1,6 @@
+import pytest
+
+from parking_reservation.errors import DuplicateSpotNumberError
 from parking_reservation.models import (
     LotStatus,
     LotType,
@@ -47,7 +50,7 @@ def test_lots_dont_share_spots(location):
     lot1 = ParkingLot(number=1, status=LotStatus.OPEN, type=LotType.PUBLIC, location=location)
     lot2 = ParkingLot(number=2, status=LotStatus.OPEN, type=LotType.PUBLIC, location=location)
 
-    lot1.spots.append(ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL))
+    lot1.add_spot(ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL))
 
     assert lot2.spots == []
 
@@ -126,3 +129,83 @@ def test_non_available_spot_counts_toward_full(location):
 
     assert lot.available_spots == []
     assert lot.is_full
+
+
+def test_adding_spot_with_same_number_raises_error(location):
+    spot1 = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+    spot2 = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot1],
+    )
+
+    with pytest.raises(DuplicateSpotNumberError):
+        lot.add_spot(spot2)
+
+
+def test_spot_with_unused_number_accepted(location):
+    spot1 = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+    spot2 = ParkingSpot(number=2, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot1],
+    )
+    lot.add_spot(spot2)
+    assert lot.spots == [spot1, spot2]
+
+
+def test_constructor_rejects_duplicate_spot_numbers(location):
+    spot1 = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+    spot2 = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+    with pytest.raises(DuplicateSpotNumberError):
+        ParkingLot(
+            number=1,
+            status=LotStatus.OPEN,
+            type=LotType.PUBLIC,
+            location=location,
+            spots=[spot1, spot2],
+        )
+
+
+def test_constructor_with_valid_spots_preserves_availability_and_fullness(location):
+    spot1 = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+    spot2 = ParkingSpot(number=2, status=SpotStatus.OUT_OF_SERVICE, type=SpotType.GENERAL)
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot1, spot2],
+    )
+
+    assert lot.available_spots == [spot1]
+    assert not lot.is_full
+
+
+def test_different_lots_can_have_spots_with_the_same_number(location):
+    spot1 = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+    spot2 = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+    lot1 = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot1],
+    )
+
+    lot2 = ParkingLot(
+        number=2,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot2],
+    )
+
+    assert lot1.spots == [spot1]
+    assert lot2.spots == [spot2]
