@@ -42,7 +42,3 @@ class ParkingLotError(Exception):
 
 class DuplicateSpotNumberError(ParkingLotError):
     message = "Spot with given number already exists"
-
-
-class InvalidParkingSpotError(ParkingLotError):
-    message = "Invalid parking spot"

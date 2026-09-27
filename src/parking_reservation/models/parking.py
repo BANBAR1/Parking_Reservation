@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 
-from parking_reservation.errors import DuplicateSpotNumberError, InvalidParkingSpotError
+from parking_reservation.errors import DuplicateSpotNumberError
 
 
 class SpotType(Enum):
@@ -90,9 +90,6 @@ class ParkingLot:
         return bool(self._spots) and not self.available_spots
 
     def add_spot(self, spot: ParkingSpot) -> None:
-
-        if not isinstance(spot, ParkingSpot):
-            raise InvalidParkingSpotError
 
         if any(lot_spot.number == spot.number for lot_spot in self._spots):
             raise DuplicateSpotNumberError
