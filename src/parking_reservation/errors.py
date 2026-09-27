@@ -33,8 +33,16 @@ class LotIsNotOpenError(ReservationError):
     message = "Wanted lot is not open"
 
 
-class DuplicateSpotNumberError(Exception):
-    message = "Spot with given number already exists"
+class ParkingLotError(Exception):
+    message = "Something went wrong with your parking lot"
 
     def __init__(self, message: str | None = None) -> None:
         super().__init__(self.message if message is None else message)
+
+
+class DuplicateSpotNumberError(ParkingLotError):
+    message = "Spot with given number already exists"
+
+
+class InvalidParkingSpotError(ParkingLotError):
+    message = "Invalid parking spot"
