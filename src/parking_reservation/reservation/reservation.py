@@ -25,7 +25,7 @@ class BookingRequest:
 # Todo: Optimize performance
 @dataclass
 class ReservationService:
-    bookings: list[Booking] = field(default_factory=list)
+    bookings: list[Booking] = field(default_factory=list[Booking])
 
     def reserve(self, request: BookingRequest) -> Booking:
         lot = request.lot

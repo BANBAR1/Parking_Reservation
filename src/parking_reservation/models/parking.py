@@ -58,7 +58,7 @@ class ParkingLot:
     status: LotStatus
     type: LotType
     location: Location
-    _spots: list[ParkingSpot] = field(default_factory=list)
+    _spots: list[ParkingSpot] = field(default_factory=list[ParkingSpot])
 
     def __init__(
         self,
