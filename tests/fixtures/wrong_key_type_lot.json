@@ -1,0 +1,14 @@
+{
+  "number": "32",
+  "status": "OPEN",
+  "type": "PUBLIC",
+  "location": {
+    "type": "RESIDENTIAL",
+    "address": "Washington"
+  },
+  "spots": [
+    { "number": 3, "status": "AVAILABLE", "type": "MANAGEMENT" },
+    { "number": 5, "status": "OUT_OF_SERVICE", "type": "ELECTRIC_VEHICLES" },
+    { "number": 6, "status": "AVAILABLE", "type": "DISABLED", "floor": 2 }
+  ]
+}
