@@ -94,7 +94,7 @@ def test_as_int_func_works():
 def test_as_int_func_raises_error():
     with pytest.raises(
         LotDescriptionKeyTypeError,
-        match="Lot number must be an integer, got '32'",
+        match="Lot number must be an integer, got True",
     ):
         lot_loader._as_int(True, "Lot number")
 
