@@ -42,3 +42,22 @@ class ParkingLotError(Exception):
 
 class DuplicateSpotNumberError(ParkingLotError):
     message = "Spot with given number already exists"
+
+
+class LoaderError(Exception):
+    message = "Something went wrong with loader"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(self.message if message is None else message)
+
+
+class KeyMissingError(LoaderError):
+    message = "Key is missing"
+
+
+class LotDescriptionKeyTypeError(LoaderError):
+    message = "Lot key type is not valid"
+
+
+class InvalidEnumError(LoaderError):
+    message = "Enum value wasn't found"

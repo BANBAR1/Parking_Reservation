@@ -1,46 +1,29 @@
 from datetime import datetime
+from pathlib import Path
 
 from parking_reservation.errors import ReservationError
-from parking_reservation.models import (
-    Driver,
-    Location,
-    LocationType,
-    LotStatus,
-    LotType,
-    ParkingLot,
-    ParkingSpot,
-    SpotStatus,
-    SpotType,
-    Vehicle,
-)
+from parking_reservation.models import Driver, Vehicle
 from parking_reservation.reservation import BookingRequest, ReservationService
+from parking_reservation.utilities import lot_loader
 
 
 def main() -> None:
+    lot_path = Path(__file__).resolve().parents[2] / "data" / "parking_lot.json"
+    lot = lot_loader.load(lot_path)
+    available_spots = lot.available_spots
+    if not available_spots:
+        raise RuntimeError(f"Parking lot {lot.number} has no available spots for the demo")
+    spot = available_spots[0]
+
     driver = Driver(name="Andrii")
     vehicle = Vehicle(license_plate="WZ12345", driver=driver)
-    spot1 = ParkingSpot(number=12, status=SpotStatus.AVAILABLE, type=SpotType.DISABLED)
-    spot2 = ParkingSpot(
-        number=10,
-        status=SpotStatus.OUT_OF_SERVICE,
-        type=SpotType.ELECTRIC_VEHICLES,
-    )
-    spot3 = ParkingSpot(number=7, status=SpotStatus.AVAILABLE, type=SpotType.MANAGEMENT)
-    location = Location(type=LocationType.RESIDENTIAL, address="Washington")
-    lot = ParkingLot(
-        number=32,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot1, spot2, spot3],
-    )
 
     service = ReservationService()
     start_time = datetime(2127, 9, 20, 9, 0)
     end_time = datetime(2127, 9, 20, 12, 30)
     booking_request = BookingRequest(
         lot=lot,
-        spot=spot1,
+        spot=spot,
         vehicle=vehicle,
         start_time=start_time,
         end_time=end_time,
@@ -56,7 +39,7 @@ def main() -> None:
         service.reserve(
             BookingRequest(
                 lot=lot,
-                spot=spot1,
+                spot=spot,
                 vehicle=vehicle,
                 start_time=datetime(2127, 9, 20, 11, 0),
                 end_time=datetime(2127, 9, 20, 13, 0),
