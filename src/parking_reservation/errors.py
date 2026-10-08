@@ -44,6 +44,21 @@ class DuplicateSpotNumberError(ParkingLotError):
     message = "Spot with given number already exists"
 
 
+class LotCollectionError(ParkingLotError):
+    message = "Something went wrong with your parking lot collection"
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(self.message if message is None else message)
+
+
+class DuplicateLotNumberError(LotCollectionError):
+    message = "Lot with given number already exists"
+
+
+class LotNotFoundError(LotCollectionError):
+    message = "Lot number is absent"
+
+
 class LoaderError(Exception):
     message = "Something went wrong with loader"
 

@@ -3,13 +3,17 @@ from pathlib import Path
 
 from parking_reservation.errors import ReservationError
 from parking_reservation.models import Driver, Vehicle
+from parking_reservation.models.lot_collection import LotCollection
 from parking_reservation.reservation import BookingRequest, ReservationService
 from parking_reservation.utilities import lot_loader
 
 
 def main() -> None:
     lot_path = Path(__file__).resolve().parents[2] / "data" / "parking_lot.json"
-    lot = lot_loader.load(lot_path)
+    lots = LotCollection()
+    for lot in lot_loader.load(lot_path):
+        lots.add(lot)
+    lot = lots.get(32)
     available_spots = lot.available_spots
     if not available_spots:
         raise RuntimeError(f"Parking lot {lot.number} has no available spots for the demo")
