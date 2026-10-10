@@ -23,7 +23,7 @@ from parking_reservation.models import (
 def load(path: Path) -> list[ParkingLot]:
     with path.open() as file:
         data: list[dict[str, object]] = json.load(file)
-        return [from_dict(lot) for lot in data]
+    return [from_dict(lot) for lot in data]
 
 
 def from_dict(data: object) -> ParkingLot:

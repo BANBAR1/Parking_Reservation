@@ -3,8 +3,14 @@ from pathlib import Path
 import pytest
 
 from parking_reservation.errors import DuplicateLotNumberError, LotNotFoundError
-from parking_reservation.models import Location, LocationType, LotStatus, LotType, ParkingLot
-from parking_reservation.models.lot_collection import LotCollection
+from parking_reservation.models import (
+    Location,
+    LocationType,
+    LotCollection,
+    LotStatus,
+    LotType,
+    ParkingLot,
+)
 from parking_reservation.utilities import lot_loader
 
 

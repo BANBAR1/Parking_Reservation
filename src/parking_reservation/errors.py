@@ -44,7 +44,7 @@ class DuplicateSpotNumberError(ParkingLotError):
     message = "Spot with given number already exists"
 
 
-class LotCollectionError(ParkingLotError):
+class LotCollectionError(Exception):
     message = "Something went wrong with your parking lot collection"
 
     def __init__(self, message: str | None = None) -> None:

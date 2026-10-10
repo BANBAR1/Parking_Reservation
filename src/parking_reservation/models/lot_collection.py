@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from parking_reservation.errors import DuplicateLotNumberError, LotNotFoundError
-from parking_reservation.models import ParkingLot
+from parking_reservation.models.parking import ParkingLot
 
 
 @dataclass

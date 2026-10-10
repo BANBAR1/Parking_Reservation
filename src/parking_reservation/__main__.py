@@ -2,8 +2,7 @@ from datetime import datetime
 from pathlib import Path
 
 from parking_reservation.errors import ReservationError
-from parking_reservation.models import Driver, Vehicle
-from parking_reservation.models.lot_collection import LotCollection
+from parking_reservation.models import Driver, LotCollection, Vehicle
 from parking_reservation.reservation import BookingRequest, ReservationService
 from parking_reservation.utilities import lot_loader
 
