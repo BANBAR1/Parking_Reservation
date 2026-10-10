@@ -1,4 +1,5 @@
 from parking_reservation.models.booking import Booking, Driver, Vehicle
+from parking_reservation.models.lot_collection import LotCollection
 from parking_reservation.models.parking import (
     Location,
     LocationType,
@@ -22,4 +23,5 @@ __all__ = [
     "SpotStatus",
     "SpotType",
     "Vehicle",
+    "LotCollection",
 ]

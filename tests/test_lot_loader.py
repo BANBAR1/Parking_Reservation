@@ -20,8 +20,9 @@ from parking_reservation.utilities import lot_loader
 
 
 def test_loads_lot_from_json_right():
-    path = Path(__file__).parent / "fixtures" / "valid_lot.json"
-    lot = lot_loader.load(path)
+    path = Path(__file__).parent / "fixtures" / "valid_lots.json"
+    lot_list = lot_loader.load(path)
+    lot = lot_list[0]
 
     assert lot.number == 32
     assert lot.location == Location(type=LocationType.RESIDENTIAL, address="Washington")
@@ -32,9 +33,9 @@ def test_loads_lot_from_json_right():
 
 
 def test_load_converts_enum_fields():
-    path = Path(__file__).parent / "fixtures" / "valid_lot.json"
-    lot = lot_loader.load(path)
-
+    path = Path(__file__).parent / "fixtures" / "valid_lots.json"
+    lot_list = lot_loader.load(path)
+    lot = lot_list[0]
     assert lot.status is LotStatus.OPEN
     assert lot.type is LotType.PUBLIC
     assert lot.location.type is LocationType.RESIDENTIAL
@@ -133,14 +134,16 @@ def test_load_rejects_duplicate_spot_numbers():
 
 
 def test_spot_without_floor_loads():
-    path = Path(__file__).parent / "fixtures" / "valid_lot.json"
-    lot = lot_loader.load(path)
+    path = Path(__file__).parent / "fixtures" / "valid_lots.json"
+    lot_list = lot_loader.load(path)
+    lot = lot_list[0]
 
     assert lot.spots[0].floor is None
 
 
 def test_spot_with_floor_loads():
-    path = Path(__file__).parent / "fixtures" / "valid_lot.json"
-    lot = lot_loader.load(path)
+    path = Path(__file__).parent / "fixtures" / "valid_lots.json"
+    lot_list = lot_loader.load(path)
+    lot = lot_list[0]
 
     assert lot.spots[2].floor == 2
