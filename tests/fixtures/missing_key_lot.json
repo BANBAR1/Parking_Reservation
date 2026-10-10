@@ -1,3 +1,4 @@
+[
 {
   "number": 32,
   "status": "OPEN",
@@ -11,3 +12,4 @@
     { "number": 6, "status": "AVAILABLE", "type": "DISABLED", "floor": 2 }
   ]
 }
+]
