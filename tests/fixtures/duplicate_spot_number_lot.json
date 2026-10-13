@@ -5,7 +5,8 @@
   "type": "PUBLIC",
   "location": {
     "type": "RESIDENTIAL",
-    "address": "Washington"
+    "address": "Washington",
+    "timezone": "America/New_York"
   },
   "spots": [
     { "number": 3, "status": "AVAILABLE", "type": "MANAGEMENT" },

@@ -1,10 +1,12 @@
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 
 from parking_reservation.errors import (
     DuplicateSpotNumberError,
     InvalidEnumError,
+    InvalidTimezoneKeyError,
     KeyMissingError,
     LotDescriptionKeyTypeError,
 )
@@ -25,7 +27,11 @@ def test_loads_lot_from_json_right():
     lot = lot_list[0]
 
     assert lot.number == 32
-    assert lot.location == Location(type=LocationType.RESIDENTIAL, address="Washington")
+    assert lot.location == Location(
+        type=LocationType.RESIDENTIAL,
+        address="Washington",
+        timezone=ZoneInfo("America/New_York"),
+    )
     assert len(lot.spots) == 3
     assert lot.spots[0].number == 3
     assert lot.spots[1].number == 5
@@ -41,6 +47,26 @@ def test_load_converts_enum_fields():
     assert lot.location.type is LocationType.RESIDENTIAL
     assert lot.spots[0].status is SpotStatus.AVAILABLE
     assert lot.spots[0].type is SpotType.MANAGEMENT
+
+
+def test_unknown_timezone_raises_readable_error():
+    lot_data = {
+        "number": 1,
+        "status": "OPEN",
+        "type": "PUBLIC",
+        "location": {
+            "type": "RESIDENTIAL",
+            "address": "Unknown",
+            "timezone": "Nowhere/Fake",
+        },
+        "spots": [],
+    }
+
+    with pytest.raises(
+        InvalidTimezoneKeyError,
+        match="There is no such time zone or there is a typo in 'Nowhere/Fake'",
+    ):
+        lot_loader.from_dict(lot_data)
 
 
 def test_missing_lot_key_raises_clear_error():
@@ -147,3 +173,21 @@ def test_spot_with_floor_loads():
     lot = lot_list[0]
 
     assert lot.spots[2].floor == 2
+
+
+def test_invalid_timezone_key_raises_readable_error():
+    timezone = "../etc/passwd"
+    lot_data = {
+        "number": 1,
+        "status": "OPEN",
+        "type": "PUBLIC",
+        "location": {
+            "type": "RESIDENTIAL",
+            "address": "Unknown",
+            "timezone": timezone,
+        },
+        "spots": [],
+    }
+
+    with pytest.raises(InvalidTimezoneKeyError, match="Invalid time zone '../etc/passwd'"):
+        lot_loader.from_dict(lot_data)

@@ -1,4 +1,5 @@
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -31,7 +32,11 @@ def test_getting_lot_by_absent_lot_number_raises_error():
         number=9,
         status=LotStatus.OPEN,
         type=LotType.PUBLIC,
-        location=Location(type=LocationType.RESIDENTIAL, address="Washington"),
+        location=Location(
+            type=LocationType.RESIDENTIAL,
+            address="Washington",
+            timezone=ZoneInfo("America/New_York"),
+        ),
     )
 
     collection.add(lot)
@@ -48,13 +53,21 @@ def test_adding_duplicate_lot_raises_error():
         number=8,
         status=LotStatus.OPEN,
         type=LotType.PUBLIC,
-        location=Location(type=LocationType.RESIDENTIAL, address="Washington"),
+        location=Location(
+            type=LocationType.RESIDENTIAL,
+            address="Washington",
+            timezone=ZoneInfo("America/New_York"),
+        ),
     )
     duplicate_lot = ParkingLot(
         number=8,
         status=LotStatus.CLOSED,
         type=LotType.PRIVATE,
-        location=Location(type=LocationType.AIRPORT, address="Seattle"),
+        location=Location(
+            type=LocationType.AIRPORT,
+            address="Seattle",
+            timezone=ZoneInfo("America/Los_Angeles"),
+        ),
     )
     collection.add(lot)
 

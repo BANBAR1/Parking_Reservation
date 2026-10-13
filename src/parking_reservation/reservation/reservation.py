@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 
 from parking_reservation.errors import (
     BookingNotFoundError,
@@ -11,6 +11,7 @@ from parking_reservation.errors import (
     SpotOutOfServiceError,
 )
 from parking_reservation.models import Booking, LotStatus, ParkingLot, ParkingSpot, Vehicle
+from parking_reservation.timekeeping import as_utc_from
 
 
 @dataclass
@@ -20,6 +21,11 @@ class BookingRequest:
     vehicle: Vehicle
     start_time: datetime
     end_time: datetime
+
+    def __post_init__(self) -> None:
+        zone = self.lot.location.timezone
+        self.start_time = as_utc_from(self.start_time, zone, "start_time")
+        self.end_time = as_utc_from(self.end_time, zone, "end_time")
 
 
 # Todo: Optimize performance
@@ -57,7 +63,7 @@ class ReservationService:
         spot = request.spot
         start_time = request.start_time
         end_time = request.end_time
-        date_now = datetime.now()
+        date_now = datetime.now(UTC)
 
         if lot.status is not LotStatus.OPEN:
             raise LotIsNotOpenError

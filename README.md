@@ -53,3 +53,7 @@ See [#5](https://github.com/BANBAR1/Parking_Reservation/issues/5) for the full b
 ## Hourly rate location
 
 The hourly rate is captured on the Booking at creation time rather than looked up later when the cost is calculated. That freezes the price the driver agreed to, so a later change to the default rates cannot silently rewrite an existing booking.
+
+## Booking timezones
+
+Booking times represent instants and are stored and compared in UTC. Interpret local booking times using the parking lot's IANA timezone, and convert UTC times back to that timezone only when displaying them. Do not use the server's local timezone to interpret booking times.

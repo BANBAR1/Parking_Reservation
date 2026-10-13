@@ -33,6 +33,10 @@ class LotIsNotOpenError(ReservationError):
     message = "Wanted lot is not open"
 
 
+class InvalidTimezoneError(ReservationError):
+    message = "Invalid booking time or timezone"
+
+
 class ParkingLotError(Exception):
     message = "Something went wrong with your parking lot"
 
@@ -76,3 +80,7 @@ class LotDescriptionKeyTypeError(LoaderError):
 
 class InvalidEnumError(LoaderError):
     message = "Enum value wasn't found"
+
+
+class InvalidTimezoneKeyError(LoaderError):
+    message = "Invalid timezone key value"
