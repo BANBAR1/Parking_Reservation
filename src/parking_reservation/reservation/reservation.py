@@ -9,9 +9,9 @@ from parking_reservation.errors import (
     SpotAlreadyBookedError,
     SpotIsNotInGivenLotError,
     SpotOutOfServiceError,
-    TimezoneError,
 )
 from parking_reservation.models import Booking, LotStatus, ParkingLot, ParkingSpot, Vehicle
+from parking_reservation.timekeeping import as_utc_from
 
 
 @dataclass
@@ -24,17 +24,8 @@ class BookingRequest:
 
     def __post_init__(self) -> None:
         zone = self.lot.location.timezone
-
-        for name in ("start_time", "end_time"):
-            value = getattr(self, name)
-            if value.tzinfo != zone:
-                raise TimezoneError(f"{name} must use the lot's timezone")
-
-            round_trip = value.astimezone(UTC).astimezone(zone)
-            if round_trip.replace(tzinfo=None) != value.replace(tzinfo=None):
-                raise TimezoneError(f"{name} is not a valid local time")
-
-            setattr(self, name, value.astimezone(UTC))
+        self.start_time = as_utc_from(self.start_time, zone, "start_time")
+        self.end_time = as_utc_from(self.end_time, zone, "end_time")
 
 
 # Todo: Optimize performance
