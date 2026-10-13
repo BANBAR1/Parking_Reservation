@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 
 from parking_reservation.errors import (
     BookingNotFoundError,
@@ -9,6 +9,7 @@ from parking_reservation.errors import (
     SpotAlreadyBookedError,
     SpotIsNotInGivenLotError,
     SpotOutOfServiceError,
+    TimezoneError,
 )
 from parking_reservation.models import Booking, LotStatus, ParkingLot, ParkingSpot, Vehicle
 
@@ -20,6 +21,20 @@ class BookingRequest:
     vehicle: Vehicle
     start_time: datetime
     end_time: datetime
+
+    def __post_init__(self) -> None:
+        zone = self.lot.location.timezone
+
+        for name in ("start_time", "end_time"):
+            value = getattr(self, name)
+            if value.tzinfo != zone:
+                raise TimezoneError(f"{name} must use the lot's timezone")
+
+            round_trip = value.astimezone(UTC).astimezone(zone)
+            if round_trip.replace(tzinfo=None) != value.replace(tzinfo=None):
+                raise TimezoneError(f"{name} is not a valid local time")
+
+            setattr(self, name, value.astimezone(UTC))
 
 
 # Todo: Optimize performance
@@ -57,7 +72,7 @@ class ReservationService:
         spot = request.spot
         start_time = request.start_time
         end_time = request.end_time
-        date_now = datetime.now()
+        date_now = datetime.now(UTC)
 
         if lot.status is not LotStatus.OPEN:
             raise LotIsNotOpenError

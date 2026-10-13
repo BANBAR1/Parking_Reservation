@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -11,8 +12,11 @@ from parking_reservation.errors import (
     SpotAlreadyBookedError,
     SpotIsNotInGivenLotError,
     SpotOutOfServiceError,
+    TimezoneError,
 )
 from parking_reservation.models import (
+    Location,
+    LocationType,
     LotStatus,
     LotType,
     ParkingLot,
@@ -389,7 +393,7 @@ def test_future_booking_does_not_block_earlier_booking_today(location, vehicle, 
         spots=[spot],
     )
     service = ReservationService()
-    today_start = datetime.now() + timedelta(hours=1)
+    today_start = datetime.now(location.timezone) + timedelta(hours=1)
     future_start = today_start + timedelta(days=7)
 
     future_booking = service.reserve(
@@ -568,3 +572,104 @@ def test_unavailable_lot_rejects_reservation(location, vehicle, spot, date_tomor
         )
 
     assert service.bookings == []
+
+
+def test_nonexistent_local_time_is_rejected(location, vehicle, spot):
+    oslo = ZoneInfo("Europe/Oslo")
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot],
+    )
+
+    with pytest.raises(TimezoneError, match="start_time is not a valid local time"):
+        request(
+            lot,
+            spot,
+            vehicle,
+            datetime(2027, 3, 28, 2, 30, tzinfo=oslo),
+            datetime(2027, 3, 28, 3, 30, tzinfo=oslo),
+        )
+
+
+def test_repeated_autumn_hour_is_distinguished_by_fold(location, vehicle, spot):
+    oslo = ZoneInfo("Europe/Oslo")
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot],
+    )
+    service = ReservationService()
+    first_occurrence = datetime(2027, 10, 31, 2, 30, tzinfo=oslo, fold=0)
+    second_occurrence = datetime(2027, 10, 31, 2, 30, tzinfo=oslo, fold=1)
+
+    first_booking = service.reserve(
+        request(
+            lot,
+            spot,
+            vehicle,
+            first_occurrence,
+            datetime(2027, 10, 31, 2, 45, tzinfo=oslo, fold=0),
+        )
+    )
+    second_booking = service.reserve(
+        request(
+            lot,
+            spot,
+            vehicle,
+            second_occurrence,
+            datetime(2027, 10, 31, 2, 45, tzinfo=oslo, fold=1),
+        )
+    )
+
+    assert first_booking.start_time == datetime(2027, 10, 31, 0, 30, tzinfo=UTC)
+    assert second_booking.start_time == datetime(2027, 10, 31, 1, 30, tzinfo=UTC)
+
+
+def test_same_local_time_in_different_lot_timezones_is_different_instant(vehicle, spot):
+    oslo = ZoneInfo("Europe/Oslo")
+    new_york = ZoneInfo("America/New_York")
+    oslo_lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=Location(
+            type=LocationType.RESIDENTIAL,
+            address="Oslo",
+            timezone=oslo,
+        ),
+        spots=[spot],
+    )
+    new_york_lot = ParkingLot(
+        number=2,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=Location(
+            type=LocationType.RESIDENTIAL,
+            address="New York",
+            timezone=new_york,
+        ),
+        spots=[spot],
+    )
+
+    oslo_request = request(
+        oslo_lot,
+        spot,
+        vehicle,
+        datetime(2027, 1, 15, 9, 0, tzinfo=oslo),
+        datetime(2027, 1, 15, 10, 0, tzinfo=oslo),
+    )
+    new_york_request = request(
+        new_york_lot,
+        spot,
+        vehicle,
+        datetime(2027, 1, 15, 9, 0, tzinfo=new_york),
+        datetime(2027, 1, 15, 10, 0, tzinfo=new_york),
+    )
+
+    assert oslo_request.start_time == datetime(2027, 1, 15, 8, 0, tzinfo=UTC)
+    assert new_york_request.start_time == datetime(2027, 1, 15, 14, 0, tzinfo=UTC)

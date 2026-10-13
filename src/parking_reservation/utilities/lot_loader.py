@@ -2,11 +2,13 @@ import json
 from enum import Enum
 from pathlib import Path
 from typing import TypeGuard
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from parking_reservation.errors import (
     InvalidEnumError,
     KeyMissingError,
     LotDescriptionKeyTypeError,
+    ZoneInfoError,
 )
 from parking_reservation.models import (
     Location,
@@ -56,12 +58,23 @@ def _spot_from_dict(data: object) -> ParkingSpot:
 
 def _location_from_dict(data: object) -> Location:
     location = _as_dict(data, "Location description")
-    _require_keys(location, ("type", "address"), "Location description")
+    _require_keys(location, ("type", "address", "timezone"), "Location description")
 
     return Location(
         type=_as_enum(location["type"], LocationType, "location type"),
         address=_as_str(location["address"], "location address"),
+        timezone=_as_timezone(location["timezone"], "time zone"),
     )
+
+
+def _as_timezone(value: object, what: str) -> ZoneInfo:
+    text = _as_str(value, what)
+    try:
+        return ZoneInfo(text)
+    except ValueError:
+        raise ZoneInfoError(f"Invalid {what} {text!r}")
+    except ZoneInfoNotFoundError:
+        raise ZoneInfoError(f"There is no such {what} or there is a typo in {text!r}")
 
 
 def _as_enum[EnumT: Enum](value: object, enum_type: type[EnumT], what: str) -> EnumT:

@@ -20,10 +20,9 @@ def main() -> None:
 
     driver = Driver(name="Andrii")
     vehicle = Vehicle(license_plate="WZ12345", driver=driver)
-
     service = ReservationService()
-    start_time = datetime(2127, 9, 20, 9, 0)
-    end_time = datetime(2127, 9, 20, 12, 30)
+    start_time = datetime(2127, 9, 20, 9, 0, tzinfo=lot.location.timezone)
+    end_time = datetime(2127, 9, 20, 12, 30, tzinfo=lot.location.timezone)
     booking_request = BookingRequest(
         lot=lot,
         spot=spot,
@@ -44,8 +43,8 @@ def main() -> None:
                 lot=lot,
                 spot=spot,
                 vehicle=vehicle,
-                start_time=datetime(2127, 9, 20, 11, 0),
-                end_time=datetime(2127, 9, 20, 13, 0),
+                start_time=datetime(2127, 9, 20, 11, 0, tzinfo=lot.location.timezone),
+                end_time=datetime(2127, 9, 20, 13, 0, tzinfo=lot.location.timezone),
             )
         )
     except ReservationError as error:

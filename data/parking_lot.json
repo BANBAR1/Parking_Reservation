@@ -3,7 +3,7 @@
   "number": 32,
   "status": "OPEN",
   "type": "PUBLIC",
-  "location": { "type": "RESIDENTIAL", "address": "Washington" },
+  "location": { "type": "RESIDENTIAL", "address": "Washington", "timezone": "America/New_York" },
   "spots": [
     { "number": 3, "status": "AVAILABLE", "type": "MANAGEMENT" },
     { "number": 5, "status": "OUT_OF_SERVICE", "type": "ELECTRIC_VEHICLES" },
@@ -14,7 +14,7 @@
   "number": 43,
   "status": "CLOSED",
   "type": "PUBLIC",
-  "location": { "type": "RESIDENTIAL", "address": "Washington" },
+  "location": { "type": "RESIDENTIAL", "address": "Washington", "timezone": "America/New_York" },
   "spots": [
     { "number": 5, "status": "OUT_OF_SERVICE", "type": "ELECTRIC_VEHICLES" },
     { "number": 2, "status": "AVAILABLE", "type": "MANAGEMENT" },
@@ -25,7 +25,7 @@
   "number": 63,
   "status": "OPEN",
   "type": "PRIVATE",
-  "location": { "type": "RESIDENTIAL", "address": "Washington" },
+  "location": { "type": "RESIDENTIAL", "address": "Washington", "timezone": "America/New_York" },
   "spots": [
     { "number": 10, "status": "AVAILABLE", "type": "MANAGEMENT", "floor": 1},
     { "number": 23, "status": "OUT_OF_SERVICE", "type": "ELECTRIC_VEHICLES", "floor": 3 },
@@ -36,7 +36,7 @@
   "number": 74,
   "status": "OPEN",
   "type": "PUBLIC",
-  "location": { "type": "OFFICE", "address": "Portland" },
+  "location": { "type": "OFFICE", "address": "Portland", "timezone": "America/Los_Angeles" },
   "spots": [
     { "number": 1, "status": "AVAILABLE", "type": "GENERAL" },
     { "number": 2, "status": "AVAILABLE", "type": "ELECTRIC_VEHICLES", "floor": 1 },
@@ -47,7 +47,7 @@
   "number": 85,
   "status": "CLOSED",
   "type": "PRIVATE",
-  "location": { "type": "AIRPORT", "address": "Seattle" },
+  "location": { "type": "AIRPORT", "address": "Seattle", "timezone": "America/Los_Angeles" },
   "spots": [
     { "number": 1, "status": "AVAILABLE", "type": "VISITORS" },
     { "number": 2, "status": "OUT_OF_SERVICE", "type": "DISABLED", "floor": 2 },

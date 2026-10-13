@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
+from zoneinfo import ZoneInfo
 
 from parking_reservation.errors import DuplicateSpotNumberError
 
@@ -38,6 +39,7 @@ class LocationType(Enum):
 class Location:
     type: LocationType
     address: str
+    timezone: ZoneInfo
     name: str | None = None
 
 

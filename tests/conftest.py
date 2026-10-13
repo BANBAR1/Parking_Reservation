@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -12,6 +13,8 @@ from parking_reservation.models import (
     Vehicle,
 )
 
+OSLO = ZoneInfo("Europe/Oslo")
+
 
 @pytest.fixture
 def vehicle():
@@ -20,7 +23,7 @@ def vehicle():
 
 @pytest.fixture
 def location():
-    return Location(type=LocationType.RESIDENTIAL, address="Oslo")
+    return Location(type=LocationType.RESIDENTIAL, address="Oslo", timezone=OSLO)
 
 
 @pytest.fixture
@@ -34,4 +37,4 @@ def spot():
 
 @pytest.fixture
 def date_tomorrow():
-    return datetime.now().replace(minute=0, second=0, microsecond=0) + timedelta(days=1)
+    return datetime.now(OSLO).replace(minute=0, second=0, microsecond=0) + timedelta(days=1)

@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 
+from parking_reservation.errors import TimezoneError
 from parking_reservation.models.parking import ParkingLot, ParkingSpot
 from parking_reservation.pricing import DEFAULT_HOURLY_RATES
 
@@ -27,6 +28,11 @@ class Booking:
 
     def __post_init__(self) -> None:
         self.hourly_rate = DEFAULT_HOURLY_RATES[self.spot.type]
+        for name in ("start_time", "end_time"):
+            value = getattr(self, name)
+            if value.tzinfo is None or value.utcoffset() is None:
+                raise TimezoneError(f"{name} must be timezone-aware")
+            setattr(self, name, value.astimezone(UTC))
 
     def duration_hours(self) -> float:
         return (self.end_time - self.start_time).total_seconds() / 3600
