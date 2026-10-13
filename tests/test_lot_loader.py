@@ -6,9 +6,9 @@ import pytest
 from parking_reservation.errors import (
     DuplicateSpotNumberError,
     InvalidEnumError,
+    InvalidTimezoneKeyError,
     KeyMissingError,
     LotDescriptionKeyTypeError,
-    ZoneInfoError,
 )
 from parking_reservation.models import (
     Location,
@@ -63,7 +63,8 @@ def test_unknown_timezone_raises_readable_error():
     }
 
     with pytest.raises(
-        ZoneInfoError, match="There is no such time zone or there is a typo in 'Nowhere/Fake'"
+        InvalidTimezoneKeyError,
+        match="There is no such time zone or there is a typo in 'Nowhere/Fake'",
     ):
         lot_loader.from_dict(lot_data)
 
@@ -188,5 +189,5 @@ def test_invalid_timezone_key_raises_readable_error():
         "spots": [],
     }
 
-    with pytest.raises(ZoneInfoError, match="Invalid time zone '../etc/passwd'"):
+    with pytest.raises(InvalidTimezoneKeyError, match="Invalid time zone '../etc/passwd'"):
         lot_loader.from_dict(lot_data)

@@ -6,13 +6,13 @@ import pytest
 from parking_reservation.errors import (
     BookingNotFoundError,
     BookingTimeInPastError,
+    InvalidTimezoneError,
     LotIsNotOpenError,
     ReservationError,
     ReversedBookingTimeError,
     SpotAlreadyBookedError,
     SpotIsNotInGivenLotError,
     SpotOutOfServiceError,
-    TimezoneError,
 )
 from parking_reservation.models import (
     Location,
@@ -584,7 +584,7 @@ def test_nonexistent_local_time_is_rejected(location, vehicle, spot):
         spots=[spot],
     )
 
-    with pytest.raises(TimezoneError, match="start_time is not a valid local time"):
+    with pytest.raises(InvalidTimezoneError, match="start_time is not a valid local time"):
         request(
             lot,
             spot,
@@ -683,7 +683,7 @@ def test_booking_request_rejects_start_time_not_in_lot_timezone(location, vehicl
         location=location,
         spots=[spot],
     )
-    with pytest.raises(TimezoneError, match="start_time must use the lot's timezone"):
+    with pytest.raises(InvalidTimezoneError, match="start_time must use the lot's timezone"):
         BookingRequest(
             lot=lot,
             spot=spot,
