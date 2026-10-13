@@ -3,6 +3,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
+from parking_reservation.errors import TimezoneError
 from parking_reservation.models import (
     Booking,
     LotStatus,
@@ -88,3 +89,15 @@ def test_duration_counts_elapsed_time_across_spring_forward(location, vehicle):
 
     assert booking.duration_hours() == 1
     assert booking.total_cost() == pytest.approx(2.50)
+
+
+def test_direct_booking_rejects_naive_start_time(location, vehicle):
+    spot = ParkingSpot(number=12, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+    with pytest.raises(TimezoneError, match="start_time must be timezone-aware"):
+        Booking(
+            lot=make_lot(location, spot),
+            spot=spot,
+            vehicle=vehicle,
+            start_time=datetime(2027, 5, 1, 9, 0),
+            end_time=datetime(2027, 5, 1, 10, 0),
+        )

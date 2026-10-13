@@ -72,9 +72,9 @@ def _as_timezone(value: object, what: str) -> ZoneInfo:
     try:
         return ZoneInfo(text)
     except ValueError:
-        raise ZoneInfoError(f"Invalid {what} {text!r}")
+        raise ZoneInfoError(f"Invalid {what} {text!r}") from None
     except ZoneInfoNotFoundError:
-        raise ZoneInfoError(f"There is no such {what} or there is a typo in {text!r}")
+        raise ZoneInfoError(f"There is no such {what} or there is a typo in {text!r}") from None
 
 
 def _as_enum[EnumT: Enum](value: object, enum_type: type[EnumT], what: str) -> EnumT:

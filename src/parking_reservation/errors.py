@@ -83,4 +83,4 @@ class InvalidEnumError(LoaderError):
 
 
 class ZoneInfoError(LoaderError):
-    message = "Something went wrong with your timezone"
+    message = "Something went wrong with your timezone information"

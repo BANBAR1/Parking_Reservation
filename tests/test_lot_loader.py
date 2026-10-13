@@ -172,3 +172,21 @@ def test_spot_with_floor_loads():
     lot = lot_list[0]
 
     assert lot.spots[2].floor == 2
+
+
+def test_invalid_timezone_key_raises_readable_error():
+    timezone = "../etc/passwd"
+    lot_data = {
+        "number": 1,
+        "status": "OPEN",
+        "type": "PUBLIC",
+        "location": {
+            "type": "RESIDENTIAL",
+            "address": "Unknown",
+            "timezone": timezone,
+        },
+        "spots": [],
+    }
+
+    with pytest.raises(ZoneInfoError, match="Invalid time zone '../etc/passwd'"):
+        lot_loader.from_dict(lot_data)

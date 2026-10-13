@@ -673,3 +673,21 @@ def test_same_local_time_in_different_lot_timezones_is_different_instant(vehicle
 
     assert oslo_request.start_time == datetime(2027, 1, 15, 8, 0, tzinfo=UTC)
     assert new_york_request.start_time == datetime(2027, 1, 15, 14, 0, tzinfo=UTC)
+
+
+def test_booking_request_rejects_start_time_not_in_lot_timezone(location, vehicle, spot):
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot],
+    )
+    with pytest.raises(TimezoneError, match="start_time must use the lot's timezone"):
+        BookingRequest(
+            lot=lot,
+            spot=spot,
+            vehicle=vehicle,
+            start_time=datetime(2027, 1, 15, 9, 0, tzinfo=ZoneInfo("America/New_York")),
+            end_time=datetime(2027, 1, 15, 10, 0, tzinfo=location.timezone),
+        )
