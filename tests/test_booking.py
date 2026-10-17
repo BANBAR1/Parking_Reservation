@@ -37,7 +37,7 @@ def test_total_cost_for_a_general_spot(location, vehicle):
         end_time=datetime(2026, 9, 1, 12, 30, tzinfo=location.timezone),
     )
 
-    assert booking._duration_hours_unrounded() == Decimal("3.50")
+    assert booking.duration_hours() == Decimal("3.50")
     assert booking.total_cost() == Decimal("8.75")
 
 
@@ -90,7 +90,7 @@ def test_duration_counts_elapsed_time_across_spring_forward(location, vehicle):
         end_time=datetime(2027, 3, 28, 3, 30, tzinfo=oslo),
     )
 
-    assert booking._duration_hours_unrounded() == Decimal("1.00")
+    assert booking.duration_hours() == Decimal("1.00")
     assert booking.total_cost() == Decimal("2.50")
 
 
@@ -216,4 +216,4 @@ def test_duration_is_not_rounded(location, vehicle):
         end_time=datetime(2026, 9, 1, 9, 20, tzinfo=location.timezone),
     )
 
-    assert booking._duration_hours_unrounded() == Decimal(1) / 3
+    assert booking.duration_hours() == Decimal(1) / 3

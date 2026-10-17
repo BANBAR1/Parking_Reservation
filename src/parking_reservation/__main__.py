@@ -36,7 +36,7 @@ def main() -> None:
     booking = service.reserve(booking_request)
 
     print(f"Created booking for spot {booking.spot.number}")
-    print(f"Duration: {booking.duration_hours()} h")
+    print(f"Duration: {booking.duration_hours():.2f} h")
     print(f"Cost: {booking.total_cost()}")
 
     try:

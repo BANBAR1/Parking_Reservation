@@ -40,12 +40,8 @@ class Booking:
         duration = self.end_time - self.start_time
         return self.pricing_rule.calculate(rate=self.hourly_rate, duration=duration)
 
-    def _duration_hours_unrounded(self) -> Decimal:
-        return get_hours(self.end_time - self.start_time)
-
     def duration_hours(self) -> Decimal:
-        delta = self.end_time - self.start_time
-        return get_hours(delta).quantize(Decimal("0.01"), "ROUND_HALF_UP")
+        return get_hours(self.end_time - self.start_time)
 
     def total_cost(self) -> Decimal:
         return self.total
