@@ -42,7 +42,11 @@ class ReservationService:
 
         self._validate_request(request)
         booking = Booking(
-            lot=lot, spot=spot, vehicle=vehicle, start_time=start_time, end_time=end_time
+            lot=lot,
+            spot=spot,
+            vehicle=vehicle,
+            start_time=start_time,
+            end_time=end_time,
         )
 
         self.bookings.append(booking)

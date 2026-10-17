@@ -16,13 +16,13 @@ def main() -> None:
     available_spots = lot.available_spots
     if not available_spots:
         raise RuntimeError(f"Parking lot {lot.number} has no available spots for the demo")
-    spot = available_spots[0]
+    spot = available_spots[1]
 
     driver = Driver(name="Andrii")
     vehicle = Vehicle(license_plate="WZ12345", driver=driver)
     service = ReservationService()
-    start_time = datetime(2127, 9, 20, 9, 0, tzinfo=lot.location.timezone)
-    end_time = datetime(2127, 9, 20, 12, 30, tzinfo=lot.location.timezone)
+    start_time = datetime(2127, 9, 20, 0, 0, tzinfo=lot.location.timezone)
+    end_time = datetime(2127, 9, 20, 0, 13, tzinfo=lot.location.timezone)
     booking_request = BookingRequest(
         lot=lot,
         spot=spot,
@@ -34,8 +34,8 @@ def main() -> None:
     booking = service.reserve(booking_request)
 
     print(f"Created booking for spot {booking.spot.number}")
-    print(f"Duration: {booking.duration_hours():.1f} h")
-    print(f"Cost: {booking.total_cost():.2f}")
+    print(f"Duration: {booking.duration_hours()} h")
+    print(f"Cost: {booking.total_cost()}")
 
     try:
         service.reserve(
