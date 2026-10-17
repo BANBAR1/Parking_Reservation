@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 
 from parking_reservation.models.parking import ParkingLot, ParkingSpot
-from parking_reservation.pricing import PricingRule, rate_for, rule_for
+from parking_reservation.pricing import PricingRule, get_hours, rate_for, rule_for
 from parking_reservation.timekeeping import as_utc
 
 
@@ -40,12 +40,12 @@ class Booking:
         duration = self.end_time - self.start_time
         return self.pricing_rule.calculate(rate=self.hourly_rate, duration=duration)
 
+    def _duration_hours_unrounded(self) -> Decimal:
+        return get_hours(self.end_time - self.start_time)
+
     def duration_hours(self) -> Decimal:
         delta = self.end_time - self.start_time
-        microseconds_delta = Decimal(delta // timedelta(microseconds=1))
-        return Decimal(microseconds_delta / Decimal("3600000000")).quantize(
-            Decimal("0.01"), "ROUND_HALF_UP"
-        )
+        return get_hours(delta).quantize(Decimal("0.01"), "ROUND_HALF_UP")
 
     def total_cost(self) -> Decimal:
         return self.total

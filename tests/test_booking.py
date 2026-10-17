@@ -37,7 +37,7 @@ def test_total_cost_for_a_general_spot(location, vehicle):
         end_time=datetime(2026, 9, 1, 12, 30, tzinfo=location.timezone),
     )
 
-    assert booking.duration_hours() == Decimal("3.50")
+    assert booking._duration_hours_unrounded() == Decimal("3.50")
     assert booking.total_cost() == Decimal("8.75")
 
 
@@ -90,7 +90,7 @@ def test_duration_counts_elapsed_time_across_spring_forward(location, vehicle):
         end_time=datetime(2027, 3, 28, 3, 30, tzinfo=oslo),
     )
 
-    assert booking.duration_hours() == Decimal("1.00")
+    assert booking._duration_hours_unrounded() == Decimal("1.00")
     assert booking.total_cost() == Decimal("2.50")
 
 
@@ -112,8 +112,8 @@ def test_booking_cost_rounds_up(location, vehicle):
         lot=make_lot(location, spot),
         spot=spot,
         vehicle=vehicle,
-        start_time=datetime(2026, 9, 1, 9, 20, tzinfo=location.timezone),
-        end_time=datetime(2026, 9, 1, 9, 33, tzinfo=location.timezone),
+        start_time=datetime(2026, 9, 1, 9, 0, tzinfo=location.timezone),
+        end_time=datetime(2026, 9, 1, 9, 13, tzinfo=location.timezone),
     )
 
     assert booking.total_cost() == Decimal("0.55")
@@ -143,6 +143,19 @@ def test_daily_cap_pricing_at_cap_charges_once(location, vehicle):
     )
 
     assert booking.total_cost() == Decimal("15")
+
+
+def test_daily_cap_pricing_just_past_cap_charges_the_cap(location, vehicle):
+    spot = ParkingSpot(number=7, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+    booking = Booking(
+        lot=make_lot(location, spot),
+        spot=spot,
+        vehicle=vehicle,
+        start_time=datetime(2026, 9, 1, 9, 20, tzinfo=location.timezone),
+        end_time=datetime(2026, 9, 1, 15, 21, tzinfo=location.timezone),
+    )
+
+    assert booking.total_cost() == Decimal("15.00")
 
 
 def test_daily_cap_pricing_over_cap_limits_charge(location, vehicle):
@@ -191,3 +204,16 @@ def test_same_duration_bookings_at_different_rates_have_exact_cost_difference(lo
     )
 
     assert booking1.total_cost() - booking2.total_cost() == Decimal("4.50")
+
+
+def test_duration_is_not_rounded(location, vehicle):
+    spot = ParkingSpot(number=7, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+    booking = Booking(
+        lot=make_lot(location, spot),
+        spot=spot,
+        vehicle=vehicle,
+        start_time=datetime(2026, 9, 1, 9, 0, tzinfo=location.timezone),
+        end_time=datetime(2026, 9, 1, 9, 20, tzinfo=location.timezone),
+    )
+
+    assert booking._duration_hours_unrounded() == Decimal(1) / 3
