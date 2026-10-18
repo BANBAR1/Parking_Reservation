@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import Protocol
 
 from parking_reservation.models.parking import ParkingLot, ParkingSpot
-from parking_reservation.pricing import PricingRule, get_hours, rate_for, rule_for
-from parking_reservation.timekeeping import as_utc
+from parking_reservation.timekeeping import as_utc, get_hours
 
 
 @dataclass
@@ -18,6 +18,10 @@ class Vehicle:
     driver: Driver
 
 
+class PricingRule(Protocol):
+    def calculate(self, rate: Decimal, duration: timedelta) -> Decimal: ...
+
+
 @dataclass
 class Booking:
     lot: ParkingLot
@@ -25,15 +29,13 @@ class Booking:
     vehicle: Vehicle
     start_time: datetime
     end_time: datetime
-    pricing_rule: PricingRule = field(init=False)
-    hourly_rate: Decimal = field(init=False)
+    pricing_rule: PricingRule
+    hourly_rate: Decimal
     total: Decimal = field(init=False)
 
     def __post_init__(self) -> None:
-        self.hourly_rate = rate_for(self.spot.type)
         self.start_time = as_utc(self.start_time, "start_time")
         self.end_time = as_utc(self.end_time, "end_time")
-        self.pricing_rule = rule_for(self.spot.type)
         self.total = self._cost_at_creation()
 
     def _cost_at_creation(self) -> Decimal:
