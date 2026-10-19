@@ -11,6 +11,7 @@ from parking_reservation.errors import (
     SpotOutOfServiceError,
 )
 from parking_reservation.models import Booking, LotStatus, ParkingLot, ParkingSpot, Vehicle
+from parking_reservation.pricing import rate_for, rule_for
 from parking_reservation.timekeeping import as_utc_from
 
 
@@ -47,6 +48,8 @@ class ReservationService:
             vehicle=vehicle,
             start_time=start_time,
             end_time=end_time,
+            hourly_rate=rate_for(spot.type),
+            pricing_rule=rule_for(spot.type),
         )
 
         self.bookings.append(booking)
