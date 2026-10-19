@@ -21,6 +21,9 @@ include = ["src", "tests"]
 typeCheckingMode = "standard"
 strict = ["src"]
 
+[tool.coverage.run]
+omit = ["*/__main__.py"]
+
 [dependency-groups]
 dev = [
     "pre-commit>=4.7.0",
