@@ -7,6 +7,9 @@ from parking_reservation.models import (
     Driver,
     Location,
     LocationType,
+    LotStatus,
+    LotType,
+    ParkingLot,
     ParkingSpot,
     SpotStatus,
     SpotType,
@@ -38,3 +41,19 @@ def spot():
 @pytest.fixture
 def date_tomorrow():
     return datetime.now(OSLO).replace(minute=0, second=0, microsecond=0) + timedelta(days=1)
+
+
+@pytest.fixture
+def make_lot(request):
+    default_location = request.getfixturevalue("location")
+
+    def make(*spots, number=1, status=LotStatus.OPEN, location=None):
+        return ParkingLot(
+            number=number,
+            status=status,
+            type=LotType.PUBLIC,
+            location=location if location is not None else default_location,
+            spots=list(spots),
+        )
+
+    return make

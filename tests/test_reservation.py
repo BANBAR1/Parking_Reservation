@@ -18,8 +18,6 @@ from parking_reservation.models import (
     Location,
     LocationType,
     LotStatus,
-    LotType,
-    ParkingLot,
     ParkingSpot,
     SpotStatus,
     SpotType,
@@ -48,16 +46,10 @@ def test_reservation_error_catches_specific_error():
         raise SpotOutOfServiceError
 
 
-def test_reserving_free_spot_returns_reserved_booking(location, vehicle, spot, date_tomorrow):
+def test_reserving_free_spot_returns_reserved_booking(vehicle, spot, date_tomorrow, make_lot):
     spot1 = spot
     spot2 = ParkingSpot(number=2, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot1, spot2],
-    )
+    lot = make_lot(spot1, spot2)
     service = ReservationService()
 
     booking = service.reserve(
@@ -74,16 +66,10 @@ def test_reserving_free_spot_returns_reserved_booking(location, vehicle, spot, d
     assert service.bookings == [booking]
 
 
-def test_two_reservations_use_different_spots(location, vehicle, spot, date_tomorrow):
+def test_two_reservations_use_different_spots(vehicle, spot, date_tomorrow, make_lot):
     spot1 = spot
     spot2 = ParkingSpot(number=2, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot1, spot2],
-    )
+    lot = make_lot(spot1, spot2)
     service = ReservationService()
 
     booking1 = service.reserve(
@@ -109,14 +95,8 @@ def test_two_reservations_use_different_spots(location, vehicle, spot, date_tomo
     assert booking2.spot is spot2
 
 
-def test_reserving_past_last_available_spot_raises_error(location, vehicle, spot, date_tomorrow):
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
+def test_reserving_past_last_available_spot_raises_error(vehicle, spot, date_tomorrow, make_lot):
+    lot = make_lot(spot)
     service = ReservationService()
     booking_request = request(
         lot,
@@ -132,13 +112,8 @@ def test_reserving_past_last_available_spot_raises_error(location, vehicle, spot
         service.reserve(booking_request)
 
 
-def test_empty_lot_is_not_full_but_reservation_raises(location, vehicle, spot, date_tomorrow):
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-    )
+def test_empty_lot_is_not_full_but_reservation_raises(vehicle, spot, date_tomorrow, make_lot):
+    lot = make_lot()
     assert not lot.is_full
 
     service = ReservationService()
@@ -154,14 +129,8 @@ def test_empty_lot_is_not_full_but_reservation_raises(location, vehicle, spot, d
         )
 
 
-def test_cancel_removes_booking(location, vehicle, spot, date_tomorrow):
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
+def test_cancel_removes_booking(vehicle, spot, date_tomorrow, make_lot):
+    lot = make_lot(spot)
     service = ReservationService()
 
     booking = service.reserve(
@@ -178,14 +147,8 @@ def test_cancel_removes_booking(location, vehicle, spot, date_tomorrow):
     assert service.bookings == []
 
 
-def test_cancelling_booking_twice_raises_on_second_attempt(location, vehicle, spot, date_tomorrow):
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
+def test_cancelling_booking_twice_raises_on_second_attempt(vehicle, spot, date_tomorrow, make_lot):
+    lot = make_lot(spot)
     service = ReservationService()
 
     booking = service.reserve(
@@ -203,14 +166,8 @@ def test_cancelling_booking_twice_raises_on_second_attempt(location, vehicle, sp
         service.cancel(booking)
 
 
-def test_failed_reserve_doesnt_creates_booking(location, vehicle, spot, date_tomorrow):
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
+def test_failed_reserve_doesnt_creates_booking(vehicle, spot, date_tomorrow, make_lot):
+    lot = make_lot(spot)
     service = ReservationService()
 
     with pytest.raises(ReversedBookingTimeError):
@@ -227,23 +184,11 @@ def test_failed_reserve_doesnt_creates_booking(location, vehicle, spot, date_tom
     assert service.bookings == []
 
 
-def test_cancelling_not_owned_booking_raises(location, vehicle, spot, date_tomorrow):
+def test_cancelling_not_owned_booking_raises(vehicle, spot, date_tomorrow, make_lot):
     spot1 = spot
     spot2 = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
-    lot1 = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot1],
-    )
-    lot2 = ParkingLot(
-        number=2,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot2],
-    )
+    lot1 = make_lot(spot1)
+    lot2 = make_lot(spot2, number=2)
     service1 = ReservationService()
     service2 = ReservationService()
 
@@ -286,21 +231,15 @@ def test_cancelling_not_owned_booking_raises(location, vehicle, spot, date_tomor
     ],
 )
 def test_booking_overlap_cases(
-    location,
     vehicle,
     spot,
     requested_start,
     requested_end,
     overlaps,
     date_tomorrow,
+    make_lot,
 ):
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
+    lot = make_lot(spot)
     service = ReservationService()
     service.reserve(
         request(
@@ -322,14 +261,8 @@ def test_booking_overlap_cases(
         assert booking.spot is spot
 
 
-def test_booking_wholly_inside_existing_booking_is_rejected(location, vehicle, spot, date_tomorrow):
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
+def test_booking_wholly_inside_existing_booking_is_rejected(vehicle, spot, date_tomorrow, make_lot):
+    lot = make_lot(spot)
     service = ReservationService()
     service.reserve(
         request(
@@ -353,14 +286,8 @@ def test_booking_wholly_inside_existing_booking_is_rejected(location, vehicle, s
         )
 
 
-def test_booking_containing_existing_booking_is_rejected(location, vehicle, spot, date_tomorrow):
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
+def test_booking_containing_existing_booking_is_rejected(vehicle, spot, date_tomorrow, make_lot):
+    lot = make_lot(spot)
     service = ReservationService()
     service.reserve(
         request(
@@ -384,14 +311,8 @@ def test_booking_containing_existing_booking_is_rejected(location, vehicle, spot
         )
 
 
-def test_future_booking_does_not_block_earlier_booking_today(location, vehicle, spot):
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
+def test_future_booking_does_not_block_earlier_booking_today(location, vehicle, spot, make_lot):
+    lot = make_lot(spot)
     service = ReservationService()
     today_start = datetime.now(location.timezone) + timedelta(hours=1)
     future_start = today_start + timedelta(days=7)
@@ -420,20 +341,14 @@ def test_future_booking_does_not_block_earlier_booking_today(location, vehicle, 
 
 
 def test_second_free_spot_is_available_when_first_spot_is_booked(
-    location, vehicle, spot, date_tomorrow
+    vehicle, spot, date_tomorrow, make_lot
 ):
     second_spot = ParkingSpot(
         number=2,
         status=SpotStatus.AVAILABLE,
         type=SpotType.GENERAL,
     )
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot, second_spot],
-    )
+    lot = make_lot(spot, second_spot)
     service = ReservationService()
     start_time = tomorrow_at(date_tomorrow, 9)
     end_time = tomorrow_at(date_tomorrow, 10)
@@ -444,14 +359,8 @@ def test_second_free_spot_is_available_when_first_spot_is_booked(
     assert second_booking.spot is second_spot
 
 
-def test_cancelling_booking_makes_its_hours_bookable_again(location, vehicle, spot, date_tomorrow):
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
+def test_cancelling_booking_makes_its_hours_bookable_again(vehicle, spot, date_tomorrow, make_lot):
+    lot = make_lot(spot)
     service = ReservationService()
     booking_request = request(
         lot,
@@ -468,14 +377,8 @@ def test_cancelling_booking_makes_its_hours_bookable_again(location, vehicle, sp
     assert replacement.spot is booking.spot
 
 
-def test_reserving_spot_not_in_lot_is_rejected(location, vehicle, spot, date_tomorrow):
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
+def test_reserving_spot_not_in_lot_is_rejected(vehicle, spot, date_tomorrow, make_lot):
+    lot = make_lot(spot)
     foreign_spot = ParkingSpot(
         number=2,
         status=SpotStatus.AVAILABLE,
@@ -495,19 +398,13 @@ def test_reserving_spot_not_in_lot_is_rejected(location, vehicle, spot, date_tom
         )
 
 
-def test_reserving_out_of_service_spot_is_rejected(location, vehicle, spot, date_tomorrow):
+def test_reserving_out_of_service_spot_is_rejected(vehicle, spot, date_tomorrow, make_lot):
     dead_spot = ParkingSpot(
         number=2,
         status=SpotStatus.OUT_OF_SERVICE,
         type=SpotType.GENERAL,
     )
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot, dead_spot],
-    )
+    lot = make_lot(spot, dead_spot)
     service = ReservationService()
 
     with pytest.raises(SpotOutOfServiceError):
@@ -524,14 +421,8 @@ def test_reserving_out_of_service_spot_is_rejected(location, vehicle, spot, date
     assert service.bookings == []
 
 
-def test_reserving_in_the_past_is_rejected(location, vehicle, spot, date_tomorrow):
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
+def test_reserving_in_the_past_is_rejected(vehicle, spot, date_tomorrow, make_lot):
+    lot = make_lot(spot)
     yesterday = date_tomorrow - timedelta(days=2)
     service = ReservationService()
 
@@ -550,14 +441,8 @@ def test_reserving_in_the_past_is_rejected(location, vehicle, spot, date_tomorro
 
 
 @pytest.mark.parametrize("closed_status", CLOSED_STATUSES)
-def test_unavailable_lot_rejects_reservation(location, vehicle, spot, date_tomorrow, closed_status):
-    lot = ParkingLot(
-        number=1,
-        status=closed_status,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
+def test_unavailable_lot_rejects_reservation(vehicle, spot, date_tomorrow, closed_status, make_lot):
+    lot = make_lot(spot, status=closed_status)
     service = ReservationService()
 
     with pytest.raises(LotIsNotOpenError):
@@ -574,15 +459,9 @@ def test_unavailable_lot_rejects_reservation(location, vehicle, spot, date_tomor
     assert service.bookings == []
 
 
-def test_nonexistent_local_time_is_rejected(location, vehicle, spot):
+def test_nonexistent_local_time_is_rejected(vehicle, spot, make_lot):
     oslo = ZoneInfo("Europe/Oslo")
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
+    lot = make_lot(spot)
 
     with pytest.raises(InvalidTimezoneError, match="start_time is not a valid local time"):
         request(
@@ -594,15 +473,9 @@ def test_nonexistent_local_time_is_rejected(location, vehicle, spot):
         )
 
 
-def test_repeated_autumn_hour_is_distinguished_by_fold(location, vehicle, spot):
+def test_repeated_autumn_hour_is_distinguished_by_fold(vehicle, spot, make_lot):
     oslo = ZoneInfo("Europe/Oslo")
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
+    lot = make_lot(spot)
     service = ReservationService()
     first_occurrence = datetime(2027, 10, 31, 2, 30, tzinfo=oslo, fold=0)
     second_occurrence = datetime(2027, 10, 31, 2, 30, tzinfo=oslo, fold=1)
@@ -630,30 +503,25 @@ def test_repeated_autumn_hour_is_distinguished_by_fold(location, vehicle, spot):
     assert second_booking.start_time == datetime(2027, 10, 31, 1, 30, tzinfo=UTC)
 
 
-def test_same_local_time_in_different_lot_timezones_is_different_instant(vehicle, spot):
+def test_same_local_time_in_different_lot_timezones_is_different_instant(vehicle, spot, make_lot):
     oslo = ZoneInfo("Europe/Oslo")
     new_york = ZoneInfo("America/New_York")
-    oslo_lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
+    oslo_lot = make_lot(
+        spot,
         location=Location(
             type=LocationType.RESIDENTIAL,
             address="Oslo",
             timezone=oslo,
         ),
-        spots=[spot],
     )
-    new_york_lot = ParkingLot(
+    new_york_lot = make_lot(
+        spot,
         number=2,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
         location=Location(
             type=LocationType.RESIDENTIAL,
             address="New York",
             timezone=new_york,
         ),
-        spots=[spot],
     )
 
     oslo_request = request(
@@ -675,14 +543,8 @@ def test_same_local_time_in_different_lot_timezones_is_different_instant(vehicle
     assert new_york_request.start_time == datetime(2027, 1, 15, 14, 0, tzinfo=UTC)
 
 
-def test_booking_request_rejects_start_time_not_in_lot_timezone(location, vehicle, spot):
-    lot = ParkingLot(
-        number=1,
-        status=LotStatus.OPEN,
-        type=LotType.PUBLIC,
-        location=location,
-        spots=[spot],
-    )
+def test_booking_request_rejects_start_time_not_in_lot_timezone(location, vehicle, spot, make_lot):
+    lot = make_lot(spot)
     with pytest.raises(InvalidTimezoneError, match="start_time must use the lot's timezone"):
         BookingRequest(
             lot=lot,
