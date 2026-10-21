@@ -1,10 +1,15 @@
+from dataclasses import FrozenInstanceError
 from datetime import datetime
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 import pytest
 
-from parking_reservation.errors import InvalidTimezoneError
+from parking_reservation.errors import (
+    InvalidTimezoneError,
+    ReversedBookingTimeError,
+    SpotIsNotInGivenLotError,
+)
 from parking_reservation.models import (
     Booking,
     ParkingSpot,
@@ -101,6 +106,40 @@ def test_direct_booking_rejects_naive_start_time(location, vehicle, make_lot):
             end_time=datetime(2027, 5, 1, 10, 0),
             hourly_rate=rate_for(spot.type),
             pricing_rule=rule_for(spot.type),
+        )
+
+
+def test_vehicle_cannot_be_changed_after_creation(vehicle):
+    with pytest.raises(FrozenInstanceError):
+        vehicle.license_plate = "XX99999"
+
+
+def test_direct_booking_rejects_end_before_start(location, vehicle, spot, make_lot):
+    with pytest.raises(ReversedBookingTimeError):
+        Booking(
+            lot=make_lot(spot),
+            spot=spot,
+            vehicle=vehicle,
+            start_time=datetime(2026, 9, 1, 10, 0, tzinfo=location.timezone),
+            end_time=datetime(2026, 9, 1, 9, 0, tzinfo=location.timezone),
+            hourly_rate=rate_for(spot.type),
+            pricing_rule=rule_for(spot.type),
+        )
+
+
+def test_direct_booking_rejects_spot_from_another_lot(location, vehicle, make_lot):
+    lot_spot = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+    foreign_spot = ParkingSpot(number=2, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
+
+    with pytest.raises(SpotIsNotInGivenLotError):
+        Booking(
+            lot=make_lot(lot_spot),
+            spot=foreign_spot,
+            vehicle=vehicle,
+            start_time=datetime(2026, 9, 1, 9, 0, tzinfo=location.timezone),
+            end_time=datetime(2026, 9, 1, 10, 0, tzinfo=location.timezone),
+            hourly_rate=rate_for(foreign_spot.type),
+            pricing_rule=rule_for(foreign_spot.type),
         )
 
 

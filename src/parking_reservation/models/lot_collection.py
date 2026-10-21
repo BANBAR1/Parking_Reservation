@@ -6,7 +6,10 @@ from parking_reservation.models.parking import ParkingLot
 
 @dataclass
 class LotCollection:
-    _lots: dict[int, ParkingLot] = field(default_factory=dict[int, ParkingLot])
+    _lots: dict[int, ParkingLot] = field(default_factory=dict[int, ParkingLot], init=False)
+
+    def lots(self) -> dict[int, ParkingLot]:
+        return self._lots.copy()
 
     def add(self, lot: ParkingLot) -> None:
         if lot.number in self._lots:

@@ -5,9 +5,7 @@ from parking_reservation.errors import (
     BookingNotFoundError,
     BookingTimeInPastError,
     LotIsNotOpenError,
-    ReversedBookingTimeError,
     SpotAlreadyBookedError,
-    SpotIsNotInGivenLotError,
     SpotOutOfServiceError,
 )
 from parking_reservation.models import Booking, LotStatus, ParkingLot, ParkingSpot, Vehicle
@@ -15,7 +13,7 @@ from parking_reservation.pricing import rate_for, rule_for
 from parking_reservation.timekeeping import as_utc_from
 
 
-@dataclass
+@dataclass(frozen=True)
 class BookingRequest:
     lot: ParkingLot
     spot: ParkingSpot
@@ -25,14 +23,17 @@ class BookingRequest:
 
     def __post_init__(self) -> None:
         zone = self.lot.location.timezone
-        self.start_time = as_utc_from(self.start_time, zone, "start_time")
-        self.end_time = as_utc_from(self.end_time, zone, "end_time")
+        object.__setattr__(self, "start_time", as_utc_from(self.start_time, zone, "start_time"))
+        object.__setattr__(self, "end_time", as_utc_from(self.end_time, zone, "end_time"))
 
 
-# Todo: Optimize performance
 @dataclass
 class ReservationService:
-    bookings: list[Booking] = field(default_factory=list[Booking])
+    _bookings: list[Booking] = field(default_factory=list[Booking], init=False)
+
+    @property
+    def bookings(self) -> list[Booking]:
+        return self._bookings.copy()
 
     def reserve(self, request: BookingRequest) -> Booking:
         lot = request.lot
@@ -41,7 +42,6 @@ class ReservationService:
         start_time = request.start_time
         end_time = request.end_time
 
-        self._validate_request(request)
         booking = Booking(
             lot=lot,
             spot=spot,
@@ -52,15 +52,16 @@ class ReservationService:
             pricing_rule=rule_for(spot.type),
         )
 
-        self.bookings.append(booking)
+        self._validate_request(request)
+        self._bookings.append(booking)
 
         return booking
 
     def cancel(self, booking: Booking) -> None:
 
-        for index, held_booking in enumerate(self.bookings):
+        for index, held_booking in enumerate(self._bookings):
             if held_booking is booking:
-                self.bookings.pop(index)
+                self._bookings.pop(index)
                 return
 
         raise BookingNotFoundError
@@ -75,19 +76,13 @@ class ReservationService:
         if lot.status is not LotStatus.OPEN:
             raise LotIsNotOpenError
 
-        if not any(lot_spot is spot for lot_spot in lot.spots):
-            raise SpotIsNotInGivenLotError
-
         if not any(available_spot is spot for available_spot in lot.available_spots):
             raise SpotOutOfServiceError
-
-        if end_time <= start_time:
-            raise ReversedBookingTimeError
 
         if start_time < date_now:
             raise BookingTimeInPastError
 
-        matched_bookings = [booking for booking in self.bookings if spot is booking.spot]
+        matched_bookings = [booking for booking in self._bookings if spot is booking.spot]
 
         for booking in matched_bookings:
             if start_time < booking.end_time and end_time > booking.start_time:
