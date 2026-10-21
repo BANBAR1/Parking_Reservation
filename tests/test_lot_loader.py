@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -8,7 +9,7 @@ from parking_reservation.errors import (
     InvalidEnumError,
     InvalidTimezoneKeyError,
     KeyMissingError,
-    LotDescriptionKeyTypeError,
+    LotDescriptionKeyValueError,
 )
 from parking_reservation.models import (
     Location,
@@ -107,7 +108,7 @@ def test_as_str_func_works():
 
 def test_as_str_func_raises_error():
     with pytest.raises(
-        LotDescriptionKeyTypeError,
+        LotDescriptionKeyValueError,
         match="Lot address must be str, got 32",
     ):
         lot_loader._as_str(32, "Lot address")
@@ -120,7 +121,7 @@ def test_as_int_func_works():
 
 def test_as_int_func_raises_error():
     with pytest.raises(
-        LotDescriptionKeyTypeError,
+        LotDescriptionKeyValueError,
         match="Lot number must be an integer, got True",
     ):
         lot_loader._as_int(True, "Lot number")
@@ -133,7 +134,7 @@ def test_as_list_func_works():
 
 def test_as_list_func_raises_error():
     with pytest.raises(
-        LotDescriptionKeyTypeError,
+        LotDescriptionKeyValueError,
         match="Lot spots must be list, got 'not a list'",
     ):
         lot_loader._as_list("not a list", "Lot spots")
@@ -146,7 +147,7 @@ def test_as_dict_func_works():
 
 def test_as_dict_func_raises_error():
     with pytest.raises(
-        LotDescriptionKeyTypeError,
+        LotDescriptionKeyValueError,
         match="Lot description must be dict, got \\[\\]",
     ):
         lot_loader._as_dict([], "Lot description")
@@ -189,5 +190,7 @@ def test_invalid_timezone_key_raises_readable_error():
         "spots": [],
     }
 
-    with pytest.raises(InvalidTimezoneKeyError, match="Invalid time zone '../etc/passwd'"):
+    with pytest.raises(
+        InvalidTimezoneKeyError, match=re.escape("Invalid time zone '../etc/passwd'")
+    ):
         lot_loader.from_dict(lot_data)

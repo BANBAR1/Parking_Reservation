@@ -16,6 +16,7 @@ __all__ = [
     "Driver",
     "Location",
     "LocationType",
+    "LotCollection",
     "LotStatus",
     "LotType",
     "ParkingLot",
@@ -23,5 +24,4 @@ __all__ = [
     "SpotStatus",
     "SpotType",
     "Vehicle",
-    "LotCollection",
 ]
