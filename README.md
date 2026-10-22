@@ -1,6 +1,6 @@
 # Parking Reservation
 
-A learning project: a small Python app for modeling parking reservations (spots, drivers, bookings) and calculating cost. There is currently no way to actually book a spot end-to-end — it's models and a cost calculation, not a full application yet.
+A learning project: a small Python app that models parking lots, spots and bookings. A booking service reserves and cancels spots and enforces the rules: no double-booking, open lots and in-service spots only, timezone-aware times, and prices in `Decimal`.
 
 ![checks](https://github.com/BANBAR1/Parking_Reservation/actions/workflows/checks.yml/badge.svg)
 

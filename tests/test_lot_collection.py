@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
+from parking_reservation import seed
 from parking_reservation.errors import DuplicateLotNumberError, LotNotFoundError
 from parking_reservation.models import (
     Location,
@@ -14,13 +15,12 @@ from parking_reservation.models import (
     LotType,
     ParkingLot,
 )
-from parking_reservation.utilities import lot_loader
 
 
 def test_lot_collection_saves_lots():
     collection = LotCollection()
     path = Path(__file__).parent / "fixtures" / "valid_lots.json"
-    lots = lot_loader.load(path)
+    lots = seed.load(path)
     for lot in lots:
         collection.add(lot)
     assert len(lots) == 5
