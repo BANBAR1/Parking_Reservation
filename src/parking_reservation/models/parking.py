@@ -35,7 +35,7 @@ class LocationType(Enum):
     RESIDENTIAL = "RESIDENTIAL"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Location:
     type: LocationType
     address: str

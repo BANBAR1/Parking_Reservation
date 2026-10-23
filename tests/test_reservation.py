@@ -1,4 +1,7 @@
+from collections.abc import Callable
+from dataclasses import FrozenInstanceError
 from datetime import UTC, datetime, timedelta
+from typing import cast
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -64,6 +67,63 @@ def test_reserving_free_spot_returns_reserved_booking(vehicle, spot, date_tomorr
 
     assert booking.spot is spot1
     assert service.bookings == [booking]
+
+
+def test_reservation_service_does_not_accept_bookings_in_constructor(
+    vehicle, spot, date_tomorrow, make_lot
+):
+    lot = make_lot(spot)
+    first = ReservationService().reserve(
+        request(
+            lot,
+            spot,
+            vehicle,
+            tomorrow_at(date_tomorrow, 9),
+            tomorrow_at(date_tomorrow, 10),
+        )
+    )
+
+    invalid_arguments = {"bookings": [first, first]}
+    constructor = cast(Callable[..., object], ReservationService)
+    with pytest.raises(TypeError):
+        constructor(**invalid_arguments)
+
+
+def test_booking_request_cannot_be_changed_after_creation(vehicle, spot, date_tomorrow, make_lot):
+    booking_request = request(
+        make_lot(spot),
+        spot,
+        vehicle,
+        tomorrow_at(date_tomorrow, 9),
+        tomorrow_at(date_tomorrow, 10),
+    )
+
+    attribute_name = "start_time"
+    with pytest.raises(FrozenInstanceError):
+        setattr(
+            booking_request,
+            attribute_name,
+            datetime(2027, 1, 15, 9, 0, tzinfo=ZoneInfo("Asia/Tokyo")),
+        )
+
+
+def test_mutating_bookings_copy_does_not_inject_overlapping_booking(
+    vehicle, spot, date_tomorrow, make_lot
+):
+    lot = make_lot(spot)
+    start_time = tomorrow_at(date_tomorrow, 9)
+    end_time = tomorrow_at(date_tomorrow, 10)
+    service = ReservationService()
+    first = service.reserve(request(lot, spot, vehicle, start_time, end_time))
+    overlapping_booking = ReservationService().reserve(
+        request(lot, spot, vehicle, start_time, end_time)
+    )
+
+    service.bookings.append(overlapping_booking)
+
+    assert service.bookings == [first]
+    with pytest.raises(SpotAlreadyBookedError):
+        service.reserve(request(lot, spot, vehicle, start_time, end_time))
 
 
 def test_two_reservations_use_different_spots(vehicle, spot, date_tomorrow, make_lot):

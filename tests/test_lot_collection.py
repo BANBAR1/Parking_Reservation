@@ -1,4 +1,6 @@
+from collections.abc import Callable
 from pathlib import Path
+from typing import cast
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -76,3 +78,43 @@ def test_adding_duplicate_lot_raises_error():
         match="Lot with number: 8 already exists in this collection",
     ):
         collection.add(duplicate_lot)
+
+
+def test_lots_returns_a_copy():
+    collection = LotCollection()
+    lot = ParkingLot(
+        number=8,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=Location(
+            type=LocationType.RESIDENTIAL,
+            address="Washington",
+            timezone=ZoneInfo("America/New_York"),
+        ),
+    )
+    collection.add(lot)
+
+    lots = collection.lots()
+    assert lots == {lot.number: lot}
+
+    lots.clear()
+
+    assert collection.lots() == {lot.number: lot}
+
+
+def test_lot_collection_does_not_accept_lots_in_constructor():
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=Location(
+            type=LocationType.RESIDENTIAL,
+            address="Oslo",
+            timezone=ZoneInfo("Europe/Oslo"),
+        ),
+    )
+
+    invalid_arguments = {"_lots": {99: lot}}
+    constructor = cast(Callable[..., object], LotCollection)
+    with pytest.raises(TypeError):
+        constructor(**invalid_arguments)
