@@ -1,7 +1,6 @@
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
-from decimal import Decimal
+from decimal import ROUND_UP, Decimal
 
 from parking_reservation.models.booking import PricingRule
 from parking_reservation.models.parking import SpotType
@@ -11,9 +10,9 @@ DEFAULT_HOURLY_RATES: dict[SpotType, Decimal] = {
     SpotType.GENERAL: Decimal("2.50"),
     SpotType.DISABLED: Decimal("1.00"),
     SpotType.ELECTRIC_VEHICLES: Decimal("3.50"),
-    SpotType.MANAGEMENT: Decimal("0.0"),
-    SpotType.WORKERS: Decimal("0.0"),
-    SpotType.VISITORS: Decimal("0.0"),
+    SpotType.MANAGEMENT: Decimal("0.00"),
+    SpotType.WORKERS: Decimal("0.00"),
+    SpotType.VISITORS: Decimal("0.00"),
 }
 
 
@@ -25,7 +24,7 @@ def rate_for(spot_type: SpotType) -> Decimal:
 class HourlyPricingRule:
     def calculate(self, rate: Decimal, duration: timedelta) -> Decimal:
         duration_hours = get_hours(duration)
-        return (rate * duration_hours).quantize(Decimal("0.01"), "ROUND_UP")
+        return (rate * duration_hours).quantize(Decimal("0.01"), ROUND_UP)
 
 
 @dataclass(frozen=True)
@@ -52,15 +51,15 @@ class FreePricingRule:
         return Decimal("0.00")
 
 
-DEFAULT_PRICING_RULE_FACTORIES: dict[SpotType, Callable[[], PricingRule]] = {
-    SpotType.GENERAL: DailyCapPricing,
-    SpotType.DISABLED: DailyCapPricing,
-    SpotType.ELECTRIC_VEHICLES: DailyCapPricing,
-    SpotType.MANAGEMENT: FreePricingRule,
-    SpotType.WORKERS: FreePricingRule,
-    SpotType.VISITORS: FreePricingRule,
+DEFAULT_PRICING_RULES: dict[SpotType, PricingRule] = {
+    SpotType.GENERAL: DailyCapPricing(),
+    SpotType.DISABLED: DailyCapPricing(),
+    SpotType.ELECTRIC_VEHICLES: DailyCapPricing(),
+    SpotType.MANAGEMENT: FreePricingRule(),
+    SpotType.WORKERS: FreePricingRule(),
+    SpotType.VISITORS: FreePricingRule(),
 }
 
 
 def rule_for(spot_type: SpotType) -> PricingRule:
-    return DEFAULT_PRICING_RULE_FACTORIES[spot_type]()
+    return DEFAULT_PRICING_RULES[spot_type]

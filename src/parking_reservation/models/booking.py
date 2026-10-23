@@ -52,6 +52,3 @@ class Booking:
 
     def duration_hours(self) -> Decimal:
         return get_hours(self.end_time - self.start_time)
-
-    def total_cost(self) -> Decimal:
-        return self.total

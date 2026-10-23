@@ -1,16 +1,16 @@
 from datetime import datetime
 from pathlib import Path
 
+from parking_reservation import seed
 from parking_reservation.errors import ReservationError
 from parking_reservation.models import Driver, LotCollection, SpotType, Vehicle
 from parking_reservation.reservation import BookingRequest, ReservationService
-from parking_reservation.utilities import lot_loader
 
 
 def main() -> None:
     lot_path = Path(__file__).resolve().parents[2] / "data" / "parking_lot.json"
     lots = LotCollection()
-    for lot in lot_loader.load(lot_path):
+    for lot in seed.load(lot_path):
         lots.add(lot)
     lot = lots.get(32)
     spot = next(
@@ -37,7 +37,7 @@ def main() -> None:
 
     print(f"Created booking for spot {booking.spot.number}")
     print(f"Duration: {booking.duration_hours():.2f} h")
-    print(f"Cost: {booking.total_cost()}")
+    print(f"Cost: {booking.total}")
 
     try:
         service.reserve(booking_request)
