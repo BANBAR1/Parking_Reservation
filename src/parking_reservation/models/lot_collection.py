@@ -20,4 +20,6 @@ class LotCollection:
         try:
             return self._lots[number]
         except KeyError:
-            raise LotNotFoundError(f"Lot with number {number} does not exist in this collection")
+            raise LotNotFoundError(
+                f"Lot with number {number} does not exist in this collection"
+            ) from None

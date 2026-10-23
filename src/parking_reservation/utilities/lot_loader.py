@@ -8,7 +8,7 @@ from parking_reservation.errors import (
     InvalidEnumError,
     InvalidTimezoneKeyError,
     KeyMissingError,
-    LotDescriptionKeyTypeError,
+    LotDescriptionKeyValueError,
 )
 from parking_reservation.models import (
     Location,
@@ -23,9 +23,9 @@ from parking_reservation.models import (
 
 
 def load(path: Path) -> list[ParkingLot]:
-    with path.open() as file:
-        data: list[dict[str, object]] = json.load(file)
-    return [from_dict(lot) for lot in data]
+    with path.open(encoding="utf-8") as file:
+        data: object = json.load(file)
+    return [from_dict(lot) for lot in _as_list(data, "Seed file")]
 
 
 def from_dict(data: object) -> ParkingLot:
@@ -90,7 +90,7 @@ def _as_enum[EnumT: Enum](value: object, enum_type: type[EnumT], what: str) -> E
 
 def _as_dict(value: object, what: str) -> dict[str, object]:
     if not _is_dict(value):
-        raise LotDescriptionKeyTypeError(f"{what} must be dict, got {value!r}")
+        raise LotDescriptionKeyValueError(f"{what} must be dict, got {value!r}")
     return value
 
 
@@ -100,7 +100,7 @@ def _is_dict(value: object) -> TypeGuard[dict[str, object]]:
 
 def _as_list(value: object, what: str) -> list[object]:
     if not _is_list(value):
-        raise LotDescriptionKeyTypeError(f"{what} must be list, got {value!r}")
+        raise LotDescriptionKeyValueError(f"{what} must be list, got {value!r}")
     return value
 
 
@@ -110,13 +110,13 @@ def _is_list(value: object) -> TypeGuard[list[object]]:
 
 def _as_int(value: object, what: str) -> int:
     if type(value) is not int:
-        raise LotDescriptionKeyTypeError(f"{what} must be an integer, got {value!r}")
+        raise LotDescriptionKeyValueError(f"{what} must be an integer, got {value!r}")
     return value
 
 
 def _as_str(value: object, what: str):
     if not isinstance(value, str):
-        raise LotDescriptionKeyTypeError(f"{what} must be str, got {value!r}")
+        raise LotDescriptionKeyValueError(f"{what} must be str, got {value!r}")
     return value
 
 

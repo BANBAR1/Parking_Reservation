@@ -14,7 +14,7 @@ dependencies = [
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP"]
+select = ["E", "F", "I", "UP", "B", "RUF", "PT", "SIM"]
 
 [tool.pyright]
 include = ["src", "tests"]

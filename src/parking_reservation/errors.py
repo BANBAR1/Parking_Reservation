@@ -1,8 +1,12 @@
-class ReservationError(Exception):
-    message = "Something went wrong with your reservation"
+class ParkingReservationError(Exception):
+    message = "Something went wrong"
 
     def __init__(self, message: str | None = None) -> None:
         super().__init__(self.message if message is None else message)
+
+
+class ReservationError(ParkingReservationError):
+    message = "Something went wrong with your reservation"
 
 
 class SpotOutOfServiceError(ReservationError):
@@ -37,22 +41,16 @@ class InvalidTimezoneError(ReservationError):
     message = "Invalid booking time or timezone"
 
 
-class ParkingLotError(Exception):
+class ParkingLotError(ParkingReservationError):
     message = "Something went wrong with your parking lot"
-
-    def __init__(self, message: str | None = None) -> None:
-        super().__init__(self.message if message is None else message)
 
 
 class DuplicateSpotNumberError(ParkingLotError):
     message = "Spot with given number already exists"
 
 
-class LotCollectionError(Exception):
+class LotCollectionError(ParkingReservationError):
     message = "Something went wrong with your parking lot collection"
-
-    def __init__(self, message: str | None = None) -> None:
-        super().__init__(self.message if message is None else message)
 
 
 class DuplicateLotNumberError(LotCollectionError):
@@ -63,19 +61,16 @@ class LotNotFoundError(LotCollectionError):
     message = "Lot number is absent"
 
 
-class LoaderError(Exception):
+class LoaderError(ParkingReservationError):
     message = "Something went wrong with loader"
-
-    def __init__(self, message: str | None = None) -> None:
-        super().__init__(self.message if message is None else message)
 
 
 class KeyMissingError(LoaderError):
     message = "Key is missing"
 
 
-class LotDescriptionKeyTypeError(LoaderError):
-    message = "Lot key type is not valid"
+class LotDescriptionKeyValueError(LoaderError):
+    message = "Lot key value is not valid"
 
 
 class InvalidEnumError(LoaderError):

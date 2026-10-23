@@ -32,7 +32,7 @@ def test_total_cost_for_a_general_spot(location, vehicle, make_lot):
 
 
 @pytest.mark.parametrize(
-    "spot_type, expected_cost",
+    ("spot_type", "expected_cost"),
     [
         (SpotType.GENERAL, Decimal("5.00")),
         (SpotType.DISABLED, Decimal("2.00")),
