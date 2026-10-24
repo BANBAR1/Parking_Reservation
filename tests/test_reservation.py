@@ -645,3 +645,16 @@ def test_active_booking_can_be_cancelled_and_remains_in_service(make_lot, locati
     assert booking.status(now) is BookingStatus.CANCELLED
     assert service.bookings == [booking]
     assert booking.total == original_total
+
+
+def test_cancelled_active_booking_remaining_time_is_bookable(make_lot, location, vehicle, spot):
+    lot = make_lot(spot)
+    now = datetime(2027, 3, 1, 8, 0, tzinfo=UTC)
+    service = ReservationService(clock=lambda: now)
+    start = datetime(2027, 3, 1, 10, 0, tzinfo=location.timezone)
+    end = start + timedelta(hours=1)
+    booking = service.reserve(request(lot, spot, vehicle, start, end))
+
+    now = datetime(2027, 3, 1, 10, 30, tzinfo=location.timezone)
+    service.cancel(booking)
+    service.reserve(request(lot, spot, vehicle, now, end))
