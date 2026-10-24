@@ -79,3 +79,15 @@ class InvalidEnumError(LoaderError):
 
 class InvalidTimezoneKeyError(LoaderError):
     message = "Invalid timezone key value"
+
+
+class BookingCancellationError(ReservationError):
+    message = "Something went wrong with booking cancellation"
+
+
+class CannotCancelCompletedBookingError(BookingCancellationError):
+    message = "Cannot cancel completed booking"
+
+
+class CannotCancelCancelledBookingError(BookingCancellationError):
+    message = "Cannot cancel cancelled booking"

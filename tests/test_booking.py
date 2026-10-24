@@ -1,5 +1,5 @@
 from dataclasses import FrozenInstanceError
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
@@ -16,6 +16,7 @@ from parking_reservation.models import (
     SpotStatus,
     SpotType,
 )
+from parking_reservation.models.booking import BookingStatus
 from parking_reservation.pricing import rate_for, rule_for
 
 
@@ -274,3 +275,31 @@ def test_duration_is_not_rounded(location, vehicle, make_lot):
     )
 
     assert booking.duration_hours() == Decimal(1) / 3
+
+
+@pytest.mark.parametrize(
+    ("offset", "expected_status"),
+    [
+        (timedelta(microseconds=-1), BookingStatus.PENDING),
+        (timedelta(0), BookingStatus.ACTIVE),
+        (timedelta(hours=1, microseconds=-1), BookingStatus.ACTIVE),
+        (timedelta(hours=1), BookingStatus.COMPLETED),
+        (timedelta(hours=1, microseconds=1), BookingStatus.COMPLETED),
+    ],
+    ids=["before-start", "at-start", "before-end", "at-end", "after-end"],
+)
+def test_status_at_booking_time_boundaries(
+    location, vehicle, make_lot, spot, offset, expected_status
+):
+    start = datetime(2027, 3, 1, 10, 0, tzinfo=location.timezone)
+    booking = Booking(
+        lot=make_lot(spot),
+        spot=spot,
+        vehicle=vehicle,
+        start_time=start,
+        end_time=start + timedelta(hours=1),
+        hourly_rate=rate_for(spot.type),
+        pricing_rule=rule_for(spot.type),
+    )
+
+    assert booking.status(start + offset) is expected_status
