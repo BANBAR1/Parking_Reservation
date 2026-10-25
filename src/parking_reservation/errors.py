@@ -83,11 +83,3 @@ class InvalidTimezoneKeyError(LoaderError):
 
 class BookingCancellationError(ReservationError):
     message = "Something went wrong with booking cancellation"
-
-
-class CannotCancelCompletedBookingError(BookingCancellationError):
-    message = "Cannot cancel completed booking"
-
-
-class CannotCancelCancelledBookingError(BookingCancellationError):
-    message = "Cannot cancel cancelled booking"

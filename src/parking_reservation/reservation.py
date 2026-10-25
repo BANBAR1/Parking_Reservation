@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from parking_reservation.errors import (
+    BookingCancellationError,
     BookingNotFoundError,
     BookingTimeInPastError,
     LotIsNotOpenError,
@@ -63,7 +64,11 @@ class ReservationService:
     def cancel(self, booking: Booking) -> None:
         for held_booking in self._bookings:
             if held_booking is booking:
-                held_booking.cancel(self.clock())
+                if held_booking.status is BookingStatus.CANCELLED:
+                    raise BookingCancellationError("Cannot cancel already cancelled booking")
+                if held_booking.end_time <= self.clock():
+                    raise BookingCancellationError("Cannot cancel already completed booking")
+                held_booking.cancel()
                 return
         raise BookingNotFoundError
 
@@ -86,7 +91,7 @@ class ReservationService:
         matched_bookings = [
             booking
             for booking in self._bookings
-            if spot is booking.spot and booking.status(date_now) != BookingStatus.CANCELLED
+            if spot is booking.spot and booking.status != BookingStatus.CANCELLED
         ]
 
         for booking in matched_bookings:

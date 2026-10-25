@@ -5,8 +5,6 @@ from enum import Enum
 from typing import Protocol
 
 from parking_reservation.errors import (
-    CannotCancelCancelledBookingError,
-    CannotCancelCompletedBookingError,
     ReversedBookingTimeError,
     SpotIsNotInGivenLotError,
 )
@@ -30,9 +28,7 @@ class PricingRule(Protocol):
 
 
 class BookingStatus(Enum):
-    PENDING = "PENDING"
     ACTIVE = "ACTIVE"
-    COMPLETED = "COMPLETED"
     CANCELLED = "CANCELLED"
 
 
@@ -46,7 +42,7 @@ class Booking:
     pricing_rule: PricingRule
     hourly_rate: Decimal
     total: Decimal = field(init=False)
-    cancelled_at: datetime | None = field(default=None, init=False)
+    status: BookingStatus = field(default=BookingStatus.ACTIVE, init=False)
 
     def __post_init__(self) -> None:
         self.start_time = as_utc(self.start_time, "start_time")
@@ -67,22 +63,5 @@ class Booking:
     def duration_hours(self) -> Decimal:
         return get_hours(self.end_time - self.start_time)
 
-    def status(self, now: datetime) -> BookingStatus:
-        if self.cancelled_at:
-            return BookingStatus.CANCELLED
-
-        if now < self.start_time:
-            return BookingStatus.PENDING
-
-        if now < self.end_time:
-            return BookingStatus.ACTIVE
-
-        return BookingStatus.COMPLETED
-
-    def cancel(self, now: datetime) -> None:
-        status = self.status(now)
-        if status is BookingStatus.COMPLETED:
-            raise CannotCancelCompletedBookingError
-        if status is BookingStatus.CANCELLED:
-            raise CannotCancelCancelledBookingError
-        self.cancelled_at = now
+    def cancel(self) -> None:
+        self.status = BookingStatus.CANCELLED

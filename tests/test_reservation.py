@@ -7,10 +7,9 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from parking_reservation.errors import (
+    BookingCancellationError,
     BookingNotFoundError,
     BookingTimeInPastError,
-    CannotCancelCancelledBookingError,
-    CannotCancelCompletedBookingError,
     InvalidTimezoneError,
     LotIsNotOpenError,
     ReservationError,
@@ -207,7 +206,7 @@ def test_cancel_changes_booking_status(vehicle, spot, date_tomorrow, make_lot):
     )
     service.cancel(booking)
 
-    assert service.bookings[0].status(date_tomorrow) == BookingStatus.CANCELLED
+    assert service.bookings[0].status is BookingStatus.CANCELLED
 
 
 def test_cancelling_booking_twice_raises_on_second_attempt(vehicle, spot, date_tomorrow, make_lot):
@@ -225,7 +224,7 @@ def test_cancelling_booking_twice_raises_on_second_attempt(vehicle, spot, date_t
     )
     service.cancel(booking)
 
-    with pytest.raises(CannotCancelCancelledBookingError):
+    with pytest.raises(BookingCancellationError, match="Cannot cancel already cancelled booking"):
         service.cancel(booking)
 
 
@@ -627,7 +626,7 @@ def test_completed_booking_cannot_be_cancelled(make_lot, location, vehicle, spot
 
     now = datetime(2027, 3, 2, 8, 0, tzinfo=UTC)
 
-    with pytest.raises(CannotCancelCompletedBookingError, match="Cannot cancel completed booking"):
+    with pytest.raises(BookingCancellationError, match="Cannot cancel already completed booking"):
         service.cancel(booking)
 
 
@@ -642,7 +641,7 @@ def test_active_booking_can_be_cancelled_and_remains_in_service(make_lot, locati
     now = datetime(2027, 3, 1, 10, 30, tzinfo=location.timezone)
     service.cancel(booking)
 
-    assert booking.status(now) is BookingStatus.CANCELLED
+    assert booking.status is BookingStatus.CANCELLED
     assert service.bookings == [booking]
     assert booking.total == original_total
 

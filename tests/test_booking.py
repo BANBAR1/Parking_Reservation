@@ -277,20 +277,7 @@ def test_duration_is_not_rounded(location, vehicle, make_lot):
     assert booking.duration_hours() == Decimal(1) / 3
 
 
-@pytest.mark.parametrize(
-    ("offset", "expected_status"),
-    [
-        (timedelta(microseconds=-1), BookingStatus.PENDING),
-        (timedelta(0), BookingStatus.ACTIVE),
-        (timedelta(hours=1, microseconds=-1), BookingStatus.ACTIVE),
-        (timedelta(hours=1), BookingStatus.COMPLETED),
-        (timedelta(hours=1, microseconds=1), BookingStatus.COMPLETED),
-    ],
-    ids=["before-start", "at-start", "before-end", "at-end", "after-end"],
-)
-def test_status_at_booking_time_boundaries(
-    location, vehicle, make_lot, spot, offset, expected_status
-):
+def test_booking_status_changes_when_cancelled(location, vehicle, make_lot, spot):
     start = datetime(2027, 3, 1, 10, 0, tzinfo=location.timezone)
     booking = Booking(
         lot=make_lot(spot),
@@ -302,4 +289,8 @@ def test_status_at_booking_time_boundaries(
         pricing_rule=rule_for(spot.type),
     )
 
-    assert booking.status(start + offset) is expected_status
+    assert booking.status is BookingStatus.ACTIVE
+
+    booking.cancel()
+
+    assert booking.status is BookingStatus.CANCELLED
