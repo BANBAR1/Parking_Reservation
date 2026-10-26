@@ -1,7 +1,9 @@
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from parking_reservation.errors import (
+    BookingCancellationError,
     BookingNotFoundError,
     BookingTimeInPastError,
     LotIsNotOpenError,
@@ -9,6 +11,7 @@ from parking_reservation.errors import (
     SpotOutOfServiceError,
 )
 from parking_reservation.models import Booking, LotStatus, ParkingLot, ParkingSpot, Vehicle
+from parking_reservation.models.booking import BookingStatus
 from parking_reservation.pricing import rate_for, rule_for
 from parking_reservation.timekeeping import as_utc_from
 
@@ -30,6 +33,7 @@ class BookingRequest:
 @dataclass
 class ReservationService:
     _bookings: list[Booking] = field(default_factory=list[Booking], init=False)
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC)
 
     @property
     def bookings(self) -> list[Booking]:
@@ -58,12 +62,14 @@ class ReservationService:
         return booking
 
     def cancel(self, booking: Booking) -> None:
-
-        for index, held_booking in enumerate(self._bookings):
+        for held_booking in self._bookings:
             if held_booking is booking:
-                self._bookings.pop(index)
+                if held_booking.status is BookingStatus.CANCELLED:
+                    raise BookingCancellationError("Cannot cancel already cancelled booking")
+                if held_booking.end_time <= self.clock():
+                    raise BookingCancellationError("Cannot cancel already completed booking")
+                held_booking.cancel()
                 return
-
         raise BookingNotFoundError
 
     def _validate_request(self, request: BookingRequest) -> None:
@@ -71,7 +77,7 @@ class ReservationService:
         spot = request.spot
         start_time = request.start_time
         end_time = request.end_time
-        date_now = datetime.now(UTC)
+        date_now = self.clock()
 
         if lot.status is not LotStatus.OPEN:
             raise LotIsNotOpenError
@@ -82,7 +88,11 @@ class ReservationService:
         if start_time < date_now:
             raise BookingTimeInPastError
 
-        matched_bookings = [booking for booking in self._bookings if spot is booking.spot]
+        matched_bookings = [
+            booking
+            for booking in self._bookings
+            if spot is booking.spot and booking.status != BookingStatus.CANCELLED
+        ]
 
         for booking in matched_bookings:
             if start_time < booking.end_time and end_time > booking.start_time:

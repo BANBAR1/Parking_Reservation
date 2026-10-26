@@ -1,9 +1,13 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
+from enum import Enum
 from typing import Protocol
 
-from parking_reservation.errors import ReversedBookingTimeError, SpotIsNotInGivenLotError
+from parking_reservation.errors import (
+    ReversedBookingTimeError,
+    SpotIsNotInGivenLotError,
+)
 from parking_reservation.models.parking import ParkingLot, ParkingSpot
 from parking_reservation.timekeeping import as_utc, get_hours
 
@@ -23,6 +27,11 @@ class PricingRule(Protocol):
     def calculate(self, rate: Decimal, duration: timedelta) -> Decimal: ...
 
 
+class BookingStatus(Enum):
+    ACTIVE = "ACTIVE"
+    CANCELLED = "CANCELLED"
+
+
 @dataclass
 class Booking:
     lot: ParkingLot
@@ -33,6 +42,7 @@ class Booking:
     pricing_rule: PricingRule
     hourly_rate: Decimal
     total: Decimal = field(init=False)
+    status: BookingStatus = field(default=BookingStatus.ACTIVE, init=False)
 
     def __post_init__(self) -> None:
         self.start_time = as_utc(self.start_time, "start_time")
@@ -52,3 +62,6 @@ class Booking:
 
     def duration_hours(self) -> Decimal:
         return get_hours(self.end_time - self.start_time)
+
+    def cancel(self) -> None:
+        self.status = BookingStatus.CANCELLED
