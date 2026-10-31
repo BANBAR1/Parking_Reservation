@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from zoneinfo import ZoneInfo
 
-from parking_reservation.errors import DuplicateSpotNumberError
+from parking_reservation.errors import DuplicateSpotNumberError, SpotNotFoundError
 
 
 class SpotType(Enum):
@@ -97,3 +97,11 @@ class ParkingLot:
             raise DuplicateSpotNumberError
 
         self._spots.append(spot)
+
+    def get_spot(self, number: int) -> ParkingSpot:
+        for spot in self._spots:
+            if spot.number == number:
+                return spot
+        raise SpotNotFoundError(
+            f"Spot with number: {number} is absent in lot number: {self.number}"
+        ) from None

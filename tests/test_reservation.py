@@ -657,3 +657,18 @@ def test_cancelled_active_booking_remaining_time_is_bookable(make_lot, location,
     now = datetime(2027, 3, 1, 10, 30, tzinfo=location.timezone)
     service.cancel(booking)
     service.reserve(request(lot, spot, vehicle, now, end))
+
+
+def test_load_bookings_copies_the_supplied_list(vehicle, spot, date_tomorrow, make_lot):
+    lot = make_lot(spot)
+    start = tomorrow_at(date_tomorrow, 9)
+    booking = ReservationService().reserve(
+        request(lot, spot, vehicle, start, start + timedelta(hours=1))
+    )
+    bookings = [booking]
+    service = ReservationService()
+
+    service.load_bookings(bookings)
+    bookings.clear()
+
+    assert service.bookings == [booking]

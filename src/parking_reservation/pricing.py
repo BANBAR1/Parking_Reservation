@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from datetime import timedelta
 from decimal import ROUND_UP, Decimal
+from typing import Protocol
 
-from parking_reservation.models.booking import PricingRule
 from parking_reservation.models.parking import SpotType
 from parking_reservation.timekeeping import get_hours
 
@@ -18,6 +18,10 @@ DEFAULT_HOURLY_RATES: dict[SpotType, Decimal] = {
 
 def rate_for(spot_type: SpotType) -> Decimal:
     return DEFAULT_HOURLY_RATES[spot_type]
+
+
+class PricingRule(Protocol):
+    def calculate(self, rate: Decimal, duration: timedelta) -> Decimal: ...
 
 
 @dataclass(frozen=True)
