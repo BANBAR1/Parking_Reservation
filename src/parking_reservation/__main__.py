@@ -8,10 +8,19 @@ from parking_reservation.reservation import BookingRequest, ReservationService
 
 
 def main() -> None:
-    lot_path = Path(__file__).resolve().parents[2] / "data" / "parking_lot.json"
+    data_path = Path(__file__).resolve().parents[2] / "data"
+    lot_path = data_path / "parking_lot.json"
+    booking_path = data_path / "booking.json"
     lots = LotCollection()
     for lot in seed.load(lot_path):
         lots.add(lot)
+
+    service = ReservationService()
+    if booking_path.exists():
+        service.load_bookings(booking_file.load(booking_path, lots))
+        print(f"Restored bookings: {service.bookings}")
+        return
+
     lot = lots.get(32)
     spot = next(
         (candidate for candidate in lot.available_spots if candidate.type is SpotType.DISABLED),
@@ -22,7 +31,6 @@ def main() -> None:
 
     driver = Driver(name="Andrii")
     vehicle = Vehicle(license_plate="WZ12345", driver=driver)
-    service = ReservationService()
     start_time = datetime(2127, 9, 20, 0, 0, tzinfo=lot.location.timezone)
     end_time = datetime(2127, 9, 20, 0, 20, tzinfo=lot.location.timezone)
     booking_request = BookingRequest(
@@ -72,7 +80,6 @@ def main() -> None:
 
     service.cancel(booking)
     print(f"Bookings after cancellation: {len(service.bookings)}")
-    booking_path = Path(__file__).resolve().parents[2] / "data" / "booking.json"
     booking_file.save(service.bookings, booking_path)
     bookings = booking_file.load(booking_path, lots)
     service.load_bookings(bookings)
