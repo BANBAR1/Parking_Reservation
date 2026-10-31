@@ -20,6 +20,10 @@ from parking_reservation.models.booking import BookingStatus
 from parking_reservation.pricing import rate_for, rule_for
 
 
+def _calculate_total(spot_type, duration):
+    return rule_for(spot_type).calculate(rate=rate_for(spot_type), duration=duration)
+
+
 def test_total_cost_for_a_general_spot(location, vehicle, make_lot):
     spot = ParkingSpot(number=12, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
 
@@ -30,7 +34,7 @@ def test_total_cost_for_a_general_spot(location, vehicle, make_lot):
         start_time=datetime(2026, 9, 1, 9, 0, tzinfo=location.timezone),
         end_time=datetime(2026, 9, 1, 12, 30, tzinfo=location.timezone),
         hourly_rate=rate_for(spot.type),
-        pricing_rule=rule_for(spot.type),
+        total=_calculate_total(spot.type, timedelta(hours=3, minutes=30)),
     )
 
     assert booking.duration_hours() == Decimal("3.50")
@@ -58,7 +62,7 @@ def test_cost_follows_the_spot_type(location, vehicle, spot_type, expected_cost,
         start_time=datetime(2026, 9, 1, 9, 0, tzinfo=location.timezone),
         end_time=datetime(2026, 9, 1, 11, 0, tzinfo=location.timezone),
         hourly_rate=rate_for(spot.type),
-        pricing_rule=rule_for(spot.type),
+        total=_calculate_total(spot.type, timedelta(hours=2)),
     )
 
     assert booking.total == expected_cost
@@ -73,7 +77,7 @@ def test_short_stay_on_an_ev_spot(location, vehicle, make_lot):
         start_time=datetime(2026, 9, 1, 9, 0, tzinfo=location.timezone),
         end_time=datetime(2026, 9, 1, 9, 12, tzinfo=location.timezone),
         hourly_rate=rate_for(spot.type),
-        pricing_rule=rule_for(spot.type),
+        total=_calculate_total(spot.type, timedelta(minutes=12)),
     )
 
     assert booking.total == Decimal("0.70")
@@ -89,7 +93,7 @@ def test_duration_counts_elapsed_time_across_spring_forward(location, vehicle, m
         start_time=datetime(2027, 3, 28, 1, 30, tzinfo=oslo),
         end_time=datetime(2027, 3, 28, 3, 30, tzinfo=oslo),
         hourly_rate=rate_for(spot.type),
-        pricing_rule=rule_for(spot.type),
+        total=_calculate_total(spot.type, timedelta(hours=1)),
     )
 
     assert booking.duration_hours() == Decimal("1.00")
@@ -106,7 +110,7 @@ def test_direct_booking_rejects_naive_start_time(location, vehicle, make_lot):
             start_time=datetime(2027, 5, 1, 9, 0),
             end_time=datetime(2027, 5, 1, 10, 0),
             hourly_rate=rate_for(spot.type),
-            pricing_rule=rule_for(spot.type),
+            total=Decimal("0.00"),
         )
 
 
@@ -124,7 +128,7 @@ def test_direct_booking_rejects_end_before_start(location, vehicle, spot, make_l
             start_time=datetime(2026, 9, 1, 10, 0, tzinfo=location.timezone),
             end_time=datetime(2026, 9, 1, 9, 0, tzinfo=location.timezone),
             hourly_rate=rate_for(spot.type),
-            pricing_rule=rule_for(spot.type),
+            total=Decimal("0.00"),
         )
 
 
@@ -140,7 +144,7 @@ def test_direct_booking_rejects_spot_from_another_lot(location, vehicle, make_lo
             start_time=datetime(2026, 9, 1, 9, 0, tzinfo=location.timezone),
             end_time=datetime(2026, 9, 1, 10, 0, tzinfo=location.timezone),
             hourly_rate=rate_for(foreign_spot.type),
-            pricing_rule=rule_for(foreign_spot.type),
+            total=Decimal("0.00"),
         )
 
 
@@ -153,7 +157,7 @@ def test_booking_cost_rounds_up(location, vehicle, make_lot):
         start_time=datetime(2026, 9, 1, 9, 0, tzinfo=location.timezone),
         end_time=datetime(2026, 9, 1, 9, 13, tzinfo=location.timezone),
         hourly_rate=rate_for(spot.type),
-        pricing_rule=rule_for(spot.type),
+        total=_calculate_total(spot.type, timedelta(minutes=13)),
     )
 
     assert booking.total == Decimal("0.55")
@@ -168,7 +172,7 @@ def test_daily_cap_pricing_under_cap_is_correct(location, vehicle, make_lot):
         start_time=datetime(2026, 9, 1, 9, 20, tzinfo=location.timezone),
         end_time=datetime(2026, 9, 1, 11, 20, tzinfo=location.timezone),
         hourly_rate=rate_for(spot.type),
-        pricing_rule=rule_for(spot.type),
+        total=_calculate_total(spot.type, timedelta(hours=2)),
     )
 
     assert booking.total == Decimal("5")
@@ -183,7 +187,7 @@ def test_daily_cap_pricing_at_cap_charges_once(location, vehicle, make_lot):
         start_time=datetime(2026, 9, 1, 9, 20, tzinfo=location.timezone),
         end_time=datetime(2026, 9, 1, 15, 20, tzinfo=location.timezone),
         hourly_rate=rate_for(spot.type),
-        pricing_rule=rule_for(spot.type),
+        total=_calculate_total(spot.type, timedelta(hours=6)),
     )
 
     assert booking.total == Decimal("15")
@@ -198,7 +202,7 @@ def test_daily_cap_pricing_just_past_cap_charges_the_cap(location, vehicle, make
         start_time=datetime(2026, 9, 1, 9, 20, tzinfo=location.timezone),
         end_time=datetime(2026, 9, 1, 15, 21, tzinfo=location.timezone),
         hourly_rate=rate_for(spot.type),
-        pricing_rule=rule_for(spot.type),
+        total=_calculate_total(spot.type, timedelta(hours=6, minutes=1)),
     )
 
     assert booking.total == Decimal("15.00")
@@ -213,7 +217,7 @@ def test_daily_cap_pricing_over_cap_limits_charge(location, vehicle, make_lot):
         start_time=datetime(2026, 9, 1, 9, 20, tzinfo=location.timezone),
         end_time=datetime(2026, 9, 2, 6, 20, tzinfo=location.timezone),
         hourly_rate=rate_for(spot.type),
-        pricing_rule=rule_for(spot.type),
+        total=_calculate_total(spot.type, timedelta(hours=21)),
     )
 
     assert booking.total == Decimal("15")
@@ -228,7 +232,7 @@ def test_daily_cap_pricing_over_cap_includes_over_24_hours(location, vehicle, ma
         start_time=datetime(2026, 9, 1, 9, 20, tzinfo=location.timezone),
         end_time=datetime(2026, 9, 3, 12, 20, tzinfo=location.timezone),
         hourly_rate=rate_for(spot.type),
-        pricing_rule=rule_for(spot.type),
+        total=_calculate_total(spot.type, timedelta(hours=51)),
     )
 
     assert booking.total == Decimal("37.5")
@@ -245,7 +249,7 @@ def test_same_duration_bookings_at_different_rates_have_exact_cost_difference(
         start_time=datetime(2026, 9, 1, 9, 20, tzinfo=location.timezone),
         end_time=datetime(2026, 9, 3, 12, 20, tzinfo=location.timezone),
         hourly_rate=rate_for(spot1.type),
-        pricing_rule=rule_for(spot1.type),
+        total=_calculate_total(spot1.type, timedelta(hours=51)),
     )
 
     spot2 = ParkingSpot(number=7, status=SpotStatus.AVAILABLE, type=SpotType.DISABLED)
@@ -256,7 +260,7 @@ def test_same_duration_bookings_at_different_rates_have_exact_cost_difference(
         start_time=datetime(2026, 9, 1, 9, 20, tzinfo=location.timezone),
         end_time=datetime(2026, 9, 3, 12, 20, tzinfo=location.timezone),
         hourly_rate=rate_for(spot2.type),
-        pricing_rule=rule_for(spot2.type),
+        total=_calculate_total(spot2.type, timedelta(hours=51)),
     )
 
     assert booking1.total - booking2.total == Decimal("4.50")
@@ -271,7 +275,7 @@ def test_duration_is_not_rounded(location, vehicle, make_lot):
         start_time=datetime(2026, 9, 1, 9, 0, tzinfo=location.timezone),
         end_time=datetime(2026, 9, 1, 9, 20, tzinfo=location.timezone),
         hourly_rate=rate_for(spot.type),
-        pricing_rule=rule_for(spot.type),
+        total=_calculate_total(spot.type, timedelta(minutes=20)),
     )
 
     assert booking.duration_hours() == Decimal(1) / 3
@@ -286,7 +290,7 @@ def test_booking_status_changes_when_cancelled(location, vehicle, make_lot, spot
         start_time=start,
         end_time=start + timedelta(hours=1),
         hourly_rate=rate_for(spot.type),
-        pricing_rule=rule_for(spot.type),
+        total=_calculate_total(spot.type, timedelta(hours=1)),
     )
 
     assert booking.status is BookingStatus.ACTIVE
