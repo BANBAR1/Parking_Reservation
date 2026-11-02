@@ -1,0 +1,41 @@
+[
+    {
+        "lot": 32,
+        "spot": 6,
+        "vehicle": {
+            "license_plate": "WZ12345",
+            "driver": "Andrii"
+        },
+        "start_time": "2127-09-20T04:00:00+00:00",
+        "end_time": "2127-09-20T04:20:00+00:00",
+        "hourly_rate": "1.00",
+        "total": "0.34",
+        "status": "CANCELLED"
+    },
+    {
+        "lot": 74,
+        "spot": 1,
+        "vehicle": {
+            "license_plate": "WZ12346",
+            "driver": "Andrii"
+        },
+        "start_time": "2127-09-20T16:00:00+00:00",
+        "end_time": "2127-09-20T18:00:00+00:00",
+        "hourly_rate": "2.50",
+        "total": "5.00",
+        "status": "ACTIVE"
+    },
+    {
+        "lot": 74,
+        "spot": 2,
+        "vehicle": {
+            "license_plate": "WZ12347",
+            "driver": "Andrii"
+        },
+        "start_time": "2127-09-20T16:00:00+00:00",
+        "end_time": "2127-09-20T18:00:00+00:00",
+        "hourly_rate": "3.50",
+        "total": "7.00",
+        "status": "ACTIVE"
+    }
+]

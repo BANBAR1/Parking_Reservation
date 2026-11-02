@@ -49,6 +49,10 @@ class DuplicateSpotNumberError(ParkingLotError):
     message = "Spot with given number already exists"
 
 
+class SpotNotFoundError(ParkingLotError):
+    message = "Spot number is absent"
+
+
 class LotCollectionError(ParkingReservationError):
     message = "Something went wrong with your parking lot collection"
 

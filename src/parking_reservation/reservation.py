@@ -45,6 +45,9 @@ class ReservationService:
         vehicle = request.vehicle
         start_time = request.start_time
         end_time = request.end_time
+        rate = rate_for(spot.type)
+        rule = rule_for(spot.type)
+        total = rule.calculate(rate=rate, duration=end_time - start_time)
 
         booking = Booking(
             lot=lot,
@@ -52,8 +55,8 @@ class ReservationService:
             vehicle=vehicle,
             start_time=start_time,
             end_time=end_time,
-            hourly_rate=rate_for(spot.type),
-            pricing_rule=rule_for(spot.type),
+            hourly_rate=rate,
+            total=total,
         )
 
         self._validate_request(request)
@@ -71,6 +74,9 @@ class ReservationService:
                 held_booking.cancel()
                 return
         raise BookingNotFoundError
+
+    def load_bookings(self, bookings: list[Booking]) -> None:
+        self._bookings = bookings.copy()
 
     def _validate_request(self, request: BookingRequest) -> None:
         lot = request.lot
