@@ -12,11 +12,11 @@ from parking_reservation.errors import (
 )
 from parking_reservation.models import (
     Booking,
+    BookingStatus,
     ParkingSpot,
     SpotStatus,
     SpotType,
 )
-from parking_reservation.models.booking import BookingStatus
 from parking_reservation.pricing import rate_for, rule_for
 
 
