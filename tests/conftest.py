@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -36,11 +35,6 @@ def spot():
         status=SpotStatus.AVAILABLE,
         type=SpotType.GENERAL,
     )
-
-
-@pytest.fixture
-def date_tomorrow():
-    return datetime.now(OSLO).replace(minute=0, second=0, microsecond=0) + timedelta(days=1)
 
 
 @pytest.fixture

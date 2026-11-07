@@ -10,8 +10,7 @@ from parking_reservation.errors import (
     SpotAlreadyBookedError,
     SpotNotFoundError,
 )
-from parking_reservation.models import Booking, LotCollection, SpotType
-from parking_reservation.models.booking import BookingStatus
+from parking_reservation.models import Booking, BookingStatus, LotCollection, SpotType
 from parking_reservation.pricing import DEFAULT_HOURLY_RATES, rate_for
 from parking_reservation.reservation import BookingRequest, ReservationService
 

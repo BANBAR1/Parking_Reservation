@@ -4,8 +4,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from parking_reservation.models import Booking, Driver, LotCollection, Vehicle
-from parking_reservation.models.booking import BookingStatus
+from parking_reservation.models import Booking, BookingStatus, Driver, LotCollection, Vehicle
 
 
 def save(bookings: list[Booking], path: Path) -> None:

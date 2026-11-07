@@ -10,8 +10,14 @@ from parking_reservation.errors import (
     SpotAlreadyBookedError,
     SpotOutOfServiceError,
 )
-from parking_reservation.models import Booking, LotStatus, ParkingLot, ParkingSpot, Vehicle
-from parking_reservation.models.booking import BookingStatus
+from parking_reservation.models import (
+    Booking,
+    BookingStatus,
+    LotStatus,
+    ParkingLot,
+    ParkingSpot,
+    Vehicle,
+)
 from parking_reservation.pricing import rate_for, rule_for
 from parking_reservation.timekeeping import as_utc_from
 
@@ -97,7 +103,7 @@ class ReservationService:
         matched_bookings = [
             booking
             for booking in self._bookings
-            if spot is booking.spot and booking.status != BookingStatus.CANCELLED
+            if spot is booking.spot and booking.status is not BookingStatus.CANCELLED
         ]
 
         for booking in matched_bookings:
