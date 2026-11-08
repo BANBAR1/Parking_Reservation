@@ -5,6 +5,7 @@ from decimal import Decimal
 import pytest
 
 from parking_reservation import booking_file
+from parking_reservation.booking_file import BookingFile
 from parking_reservation.errors import (
     InvalidTimezoneError,
     SpotAlreadyBookedError,
@@ -12,7 +13,11 @@ from parking_reservation.errors import (
 )
 from parking_reservation.models import Booking, BookingStatus, LotCollection, SpotType
 from parking_reservation.pricing import DEFAULT_HOURLY_RATES, rate_for
-from parking_reservation.reservation import BookingRequest, ReservationService
+from parking_reservation.reservation import (
+    BookingMemory,
+    BookingRequest,
+    ReservationService,
+)
 
 
 def _request(lot, spot, vehicle, start):
@@ -31,7 +36,9 @@ def test_load_returns_equal_bookings_referencing_existing_lot_and_spot(
     lot = make_lot(spot)
     lots = LotCollection()
     lots.add(lot)
-    service = ReservationService(clock=lambda: datetime(2027, 3, 1, 8, 0, tzinfo=UTC))
+    service = ReservationService(
+        storage=BookingMemory(), clock=lambda: datetime(2027, 3, 1, 8, 0, tzinfo=UTC)
+    )
     start = datetime(2027, 3, 2, 9, 0, tzinfo=location.timezone)
     booking = service.reserve(_request(lot, spot, vehicle, start))
     path = tmp_path / "bookings.json"
@@ -46,7 +53,9 @@ def test_load_returns_equal_bookings_referencing_existing_lot_and_spot(
 
 def test_save_writes_right_json_format(tmp_path, make_lot, spot, vehicle, location):
     lot = make_lot(spot)
-    service = ReservationService(clock=lambda: datetime(2027, 3, 1, 8, 0, tzinfo=UTC))
+    service = ReservationService(
+        storage=BookingMemory(), clock=lambda: datetime(2027, 3, 1, 8, 0, tzinfo=UTC)
+    )
     start = datetime(2027, 3, 2, 9, 0, tzinfo=location.timezone)
     service.reserve(_request(lot, spot, vehicle, start))
     path = tmp_path / "bookings.json"
@@ -62,19 +71,76 @@ def test_save_writes_right_json_format(tmp_path, make_lot, spot, vehicle, locati
     assert saved_data[0]["total"] == "5.00"
 
 
+def test_reserve_saves_booking_to_file(tmp_path, make_lot, spot, vehicle, location):
+    lot = make_lot(spot)
+    lots = LotCollection()
+    lots.add(lot)
+    path = tmp_path / "bookings.json"
+    now = datetime(2027, 3, 1, 8, 0, tzinfo=UTC)
+    start = datetime(2027, 3, 2, 9, 0, tzinfo=location.timezone)
+    service = ReservationService(storage=BookingFile(path, lots), clock=lambda: now)
+
+    booking = service.reserve(_request(lot, spot, vehicle, start))
+    restored_service = ReservationService(storage=BookingFile(path, lots), clock=lambda: now)
+
+    assert restored_service.bookings == [booking]
+
+
+def test_refused_reservation_does_not_change_file(tmp_path, make_lot, spot, vehicle, location):
+    lot = make_lot(spot)
+    lots = LotCollection()
+    lots.add(lot)
+    path = tmp_path / "bookings.json"
+    now = datetime(2027, 3, 1, 8, 0, tzinfo=UTC)
+    start = datetime(2027, 3, 2, 9, 0, tzinfo=location.timezone)
+    service = ReservationService(storage=BookingFile(path, lots), clock=lambda: now)
+    service.reserve(_request(lot, spot, vehicle, start))
+    contents_before = path.read_text(encoding="utf-8")
+
+    with pytest.raises(SpotAlreadyBookedError):
+        service.reserve(_request(lot, spot, vehicle, start))
+
+    assert path.read_text(encoding="utf-8") == contents_before
+    assert len(booking_file.load(path, lots)) == 1
+
+
+def test_first_start_with_missing_file_has_no_bookings(tmp_path, make_lot, spot):
+    lot = make_lot(spot)
+    lots = LotCollection()
+    lots.add(lot)
+    path = tmp_path / "bookings.json"
+
+    service = ReservationService(storage=BookingFile(path, lots))
+
+    assert service.bookings == []
+
+
+def test_bookings_from_file_storage_are_a_copy(tmp_path, make_lot, spot, vehicle, location):
+    lot = make_lot(spot)
+    lots = LotCollection()
+    lots.add(lot)
+    path = tmp_path / "bookings.json"
+    now = datetime(2027, 3, 1, 8, 0, tzinfo=UTC)
+    start = datetime(2027, 3, 2, 9, 0, tzinfo=location.timezone)
+    service = ReservationService(storage=BookingFile(path, lots), clock=lambda: now)
+    booking = service.reserve(_request(lot, spot, vehicle, start))
+
+    service.bookings.clear()
+
+    assert service.bookings == [booking]
+
+
 def test_loaded_booking_blocks_overlapping_reservation(tmp_path, make_lot, spot, vehicle, location):
     lot = make_lot(spot)
     lots = LotCollection()
     lots.add(lot)
     start = datetime(2027, 3, 2, 9, 0, tzinfo=location.timezone)
     now = datetime(2027, 3, 1, 8, 0, tzinfo=UTC)
-    original_service = ReservationService(clock=lambda: now)
-    original_service.reserve(_request(lot, spot, vehicle, start))
     path = tmp_path / "bookings.json"
-    booking_file.save(original_service.bookings, path)
+    original_service = ReservationService(storage=BookingFile(path, lots), clock=lambda: now)
+    original_service.reserve(_request(lot, spot, vehicle, start))
 
-    restored_service = ReservationService(clock=lambda: now)
-    restored_service.load_bookings(booking_file.load(path, lots))
+    restored_service = ReservationService(storage=BookingFile(path, lots), clock=lambda: now)
 
     with pytest.raises(SpotAlreadyBookedError):
         restored_service.reserve(_request(lot, spot, vehicle, start))
@@ -88,14 +154,12 @@ def test_load_restores_cancelled_status_and_allows_rebooking(
     lots.add(lot)
     start = datetime(2027, 3, 2, 9, 0, tzinfo=location.timezone)
     now = datetime(2027, 3, 1, 8, 0, tzinfo=UTC)
-    original_service = ReservationService(clock=lambda: now)
+    path = tmp_path / "bookings.json"
+    original_service = ReservationService(storage=BookingFile(path, lots), clock=lambda: now)
     booking = original_service.reserve(_request(lot, spot, vehicle, start))
     original_service.cancel(booking)
-    path = tmp_path / "bookings.json"
-    booking_file.save(original_service.bookings, path)
 
-    restored_service = ReservationService(clock=lambda: now)
-    restored_service.load_bookings(booking_file.load(path, lots))
+    restored_service = ReservationService(storage=BookingFile(path, lots), clock=lambda: now)
 
     assert restored_service.bookings[0].status is BookingStatus.CANCELLED
     restored_service.reserve(_request(lot, spot, vehicle, start))
@@ -118,10 +182,7 @@ def test_load_restores_past_booking_without_reserving(tmp_path, make_lot, spot, 
     path = tmp_path / "bookings.json"
     booking_file.save([booking], path)
 
-    loaded = booking_file.load(path, lots)
-
-    service = ReservationService()
-    service.load_bookings(loaded)
+    service = ReservationService(storage=BookingFile(path, lots))
     assert service.bookings == [booking]
 
 
