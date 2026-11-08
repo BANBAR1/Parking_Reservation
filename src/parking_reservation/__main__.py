@@ -1,10 +1,10 @@
 from datetime import datetime
 from pathlib import Path
 
-from parking_reservation import booking_file, seed
+from parking_reservation import seed
 from parking_reservation.errors import ReservationError
 from parking_reservation.models import Driver, LotCollection, SpotType, Vehicle
-from parking_reservation.reservation import BookingRequest, ReservationService
+from parking_reservation.reservation import BookingFile, BookingRequest, ReservationService
 
 
 def main() -> None:
@@ -13,7 +13,6 @@ def main() -> None:
     lots = LotCollection()
     for lot in seed.load(lot_path):
         lots.add(lot)
-    bookings = booking_file.load(bookings_path, lots)
     lot = lots.get(32)
     spot = next(
         (candidate for candidate in lot.available_spots if candidate.type is SpotType.DISABLED),
@@ -24,8 +23,7 @@ def main() -> None:
 
     driver = Driver(name="Andrii")
     vehicle = Vehicle(license_plate="WZ12345", driver=driver)
-    service = ReservationService()
-    service.load_bookings(bookings)
+    service = ReservationService(storage=BookingFile(bookings_path, lots))
     print(f"Restored bookings: {len(service.bookings)}")
     start_time = datetime(2127, 9, 20, 0, 0, tzinfo=lot.location.timezone)
     end_time = datetime(2127, 9, 20, 0, 20, tzinfo=lot.location.timezone)
@@ -50,7 +48,7 @@ def main() -> None:
 
     service.cancel(booking)
     print(f"Bookings after cancellation: {len(service.bookings)}")
-    booking_file.save(service.bookings, bookings_path)
+    # booking_file.save(service.bookings, bookings_path)
 
 
 if __name__ == "__main__":

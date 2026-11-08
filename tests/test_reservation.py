@@ -27,7 +27,7 @@ from parking_reservation.models import (
     SpotStatus,
     SpotType,
 )
-from parking_reservation.reservation import BookingRequest, ReservationService
+from parking_reservation.reservation import BookingMemory, BookingRequest, ReservationService
 
 CLOSED_STATUSES = [status for status in LotStatus if status is not LotStatus.OPEN]
 OSLO = ZoneInfo("Europe/Oslo")
@@ -55,7 +55,7 @@ def test_reservation_error_catches_specific_error():
 
 def test_default_clock_reads_the_current_time_in_utc():
     before = datetime.now(UTC)
-    now = ReservationService().clock()
+    now = ReservationService(storage=BookingMemory()).clock()
     after = datetime.now(UTC)
 
     assert before <= now <= after
@@ -66,7 +66,7 @@ def test_reserving_free_spot_returns_reserved_booking(vehicle, spot, make_lot):
     spot1 = spot
     spot2 = ParkingSpot(number=2, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
     lot = make_lot(spot1, spot2)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
 
     booking = service.reserve(
         request(
@@ -84,7 +84,7 @@ def test_reserving_free_spot_returns_reserved_booking(vehicle, spot, make_lot):
 
 def test_reservation_service_does_not_accept_bookings_in_constructor(vehicle, spot, make_lot):
     lot = make_lot(spot)
-    first = ReservationService(clock=lambda: NOW).reserve(
+    first = ReservationService(storage=BookingMemory(), clock=lambda: NOW).reserve(
         request(
             lot,
             spot,
@@ -94,7 +94,7 @@ def test_reservation_service_does_not_accept_bookings_in_constructor(vehicle, sp
         )
     )
 
-    invalid_arguments = {"bookings": [first, first]}
+    invalid_arguments = {"storage": BookingMemory(), "bookings": [first, first]}
     constructor = cast(Callable[..., object], ReservationService)
     with pytest.raises(TypeError):
         constructor(**invalid_arguments)
@@ -122,9 +122,9 @@ def test_mutating_bookings_copy_does_not_inject_overlapping_booking(vehicle, spo
     lot = make_lot(spot)
     start_time = at(9)
     end_time = at(10)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
     first = service.reserve(request(lot, spot, vehicle, start_time, end_time))
-    overlapping_booking = ReservationService(clock=lambda: NOW).reserve(
+    overlapping_booking = ReservationService(storage=BookingMemory(), clock=lambda: NOW).reserve(
         request(lot, spot, vehicle, start_time, end_time)
     )
 
@@ -139,7 +139,7 @@ def test_two_reservations_use_different_spots(vehicle, spot, make_lot):
     spot1 = spot
     spot2 = ParkingSpot(number=2, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
     lot = make_lot(spot1, spot2)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
 
     booking1 = service.reserve(
         request(
@@ -166,7 +166,7 @@ def test_two_reservations_use_different_spots(vehicle, spot, make_lot):
 
 def test_reserving_past_last_available_spot_raises_error(vehicle, spot, make_lot):
     lot = make_lot(spot)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
     booking_request = request(
         lot,
         spot,
@@ -185,7 +185,7 @@ def test_empty_lot_is_not_full_but_reservation_raises(vehicle, spot, make_lot):
     lot = make_lot()
     assert not lot.is_full
 
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
     with pytest.raises(SpotIsNotInGivenLotError):
         service.reserve(
             request(
@@ -200,7 +200,7 @@ def test_empty_lot_is_not_full_but_reservation_raises(vehicle, spot, make_lot):
 
 def test_cancel_changes_booking_status(vehicle, spot, make_lot):
     lot = make_lot(spot)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
 
     booking = service.reserve(
         request(
@@ -218,7 +218,7 @@ def test_cancel_changes_booking_status(vehicle, spot, make_lot):
 
 def test_cancelling_booking_twice_raises_on_second_attempt(vehicle, spot, make_lot):
     lot = make_lot(spot)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
 
     booking = service.reserve(
         request(
@@ -237,7 +237,7 @@ def test_cancelling_booking_twice_raises_on_second_attempt(vehicle, spot, make_l
 
 def test_failed_reserve_doesnt_creates_booking(vehicle, spot, make_lot):
     lot = make_lot(spot)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
 
     with pytest.raises(ReversedBookingTimeError):
         service.reserve(
@@ -258,8 +258,8 @@ def test_cancelling_not_owned_booking_raises(vehicle, spot, make_lot):
     spot2 = ParkingSpot(number=1, status=SpotStatus.AVAILABLE, type=SpotType.GENERAL)
     lot1 = make_lot(spot1)
     lot2 = make_lot(spot2, number=2)
-    service1 = ReservationService(clock=lambda: NOW)
-    service2 = ReservationService(clock=lambda: NOW)
+    service1 = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
+    service2 = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
 
     booking1 = service1.reserve(
         request(
@@ -309,7 +309,7 @@ def test_booking_overlap_cases(
     make_lot,
 ):
     lot = make_lot(spot)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
     service.reserve(
         request(
             lot,
@@ -332,7 +332,7 @@ def test_booking_overlap_cases(
 
 def test_booking_wholly_inside_existing_booking_is_rejected(vehicle, spot, make_lot):
     lot = make_lot(spot)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
     service.reserve(
         request(
             lot,
@@ -357,7 +357,7 @@ def test_booking_wholly_inside_existing_booking_is_rejected(vehicle, spot, make_
 
 def test_booking_containing_existing_booking_is_rejected(vehicle, spot, make_lot):
     lot = make_lot(spot)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
     service.reserve(
         request(
             lot,
@@ -382,7 +382,7 @@ def test_booking_containing_existing_booking_is_rejected(vehicle, spot, make_lot
 
 def test_future_booking_does_not_block_earlier_booking_today(location, vehicle, spot, make_lot):
     lot = make_lot(spot)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
     today_start = NOW.astimezone(location.timezone) + timedelta(hours=1)
     future_start = today_start + timedelta(days=7)
 
@@ -416,7 +416,7 @@ def test_second_free_spot_is_available_when_first_spot_is_booked(vehicle, spot, 
         type=SpotType.GENERAL,
     )
     lot = make_lot(spot, second_spot)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
     start_time = at(9)
     end_time = at(10)
 
@@ -428,7 +428,7 @@ def test_second_free_spot_is_available_when_first_spot_is_booked(vehicle, spot, 
 
 def test_cancelling_booking_makes_its_hours_bookable_again(vehicle, spot, make_lot):
     lot = make_lot(spot)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
     booking_request = request(
         lot,
         spot,
@@ -451,7 +451,7 @@ def test_reserving_spot_not_in_lot_is_rejected(vehicle, spot, make_lot):
         status=SpotStatus.AVAILABLE,
         type=SpotType.GENERAL,
     )
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
 
     with pytest.raises(SpotIsNotInGivenLotError):
         service.reserve(
@@ -472,7 +472,7 @@ def test_reserving_out_of_service_spot_is_rejected(vehicle, spot, make_lot):
         type=SpotType.GENERAL,
     )
     lot = make_lot(spot, dead_spot)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
 
     with pytest.raises(SpotOutOfServiceError):
         service.reserve(
@@ -491,7 +491,7 @@ def test_reserving_out_of_service_spot_is_rejected(vehicle, spot, make_lot):
 def test_reserving_in_the_past_is_rejected(vehicle, spot, make_lot):
     lot = make_lot(spot)
     yesterday = (NOW - timedelta(days=1)).astimezone(OSLO)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
 
     with pytest.raises(BookingTimeInPastError):
         service.reserve(
@@ -510,7 +510,7 @@ def test_reserving_in_the_past_is_rejected(vehicle, spot, make_lot):
 @pytest.mark.parametrize("closed_status", CLOSED_STATUSES)
 def test_unavailable_lot_rejects_reservation(vehicle, spot, closed_status, make_lot):
     lot = make_lot(spot, status=closed_status)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
 
     with pytest.raises(LotIsNotOpenError):
         service.reserve(
@@ -543,7 +543,7 @@ def test_nonexistent_local_time_is_rejected(vehicle, spot, make_lot):
 def test_repeated_autumn_hour_is_distinguished_by_fold(vehicle, spot, make_lot):
     oslo = ZoneInfo("Europe/Oslo")
     lot = make_lot(spot)
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
     first_occurrence = datetime(2027, 10, 31, 2, 30, tzinfo=oslo, fold=0)
     second_occurrence = datetime(2027, 10, 31, 2, 30, tzinfo=oslo, fold=1)
 
@@ -625,7 +625,7 @@ def test_booking_request_rejects_start_time_not_in_lot_timezone(location, vehicl
 def test_completed_booking_cannot_be_cancelled(make_lot, location, vehicle, spot):
     lot = make_lot(spot)
     now = datetime(2027, 3, 1, 8, 0, tzinfo=UTC)
-    service = ReservationService(clock=lambda: now)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: now)
     start = datetime(2027, 3, 1, 10, 0, tzinfo=location.timezone)
     booking = service.reserve(request(lot, spot, vehicle, start, start + timedelta(hours=1)))
 
@@ -638,7 +638,7 @@ def test_completed_booking_cannot_be_cancelled(make_lot, location, vehicle, spot
 def test_active_booking_can_be_cancelled_and_remains_in_service(make_lot, location, vehicle, spot):
     lot = make_lot(spot)
     now = datetime(2027, 3, 1, 8, 0, tzinfo=UTC)
-    service = ReservationService(clock=lambda: now)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: now)
     start = datetime(2027, 3, 1, 10, 0, tzinfo=location.timezone)
     booking = service.reserve(request(lot, spot, vehicle, start, start + timedelta(hours=1)))
     original_total = booking.total
@@ -654,7 +654,7 @@ def test_active_booking_can_be_cancelled_and_remains_in_service(make_lot, locati
 def test_cancelled_active_booking_remaining_time_is_bookable(make_lot, location, vehicle, spot):
     lot = make_lot(spot)
     now = datetime(2027, 3, 1, 8, 0, tzinfo=UTC)
-    service = ReservationService(clock=lambda: now)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: now)
     start = datetime(2027, 3, 1, 10, 0, tzinfo=location.timezone)
     end = start + timedelta(hours=1)
     booking = service.reserve(request(lot, spot, vehicle, start, end))
@@ -668,7 +668,7 @@ def test_cancelled_active_booking_remaining_time_is_bookable(make_lot, location,
 def test_booking_cannot_be_cancelled_at_its_end_time(make_lot, vehicle, spot):
     lot = make_lot(spot)
     now = NOW
-    service = ReservationService(clock=lambda: now)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: now)
     booking = service.reserve(request(lot, spot, vehicle, at(9), at(10)))
 
     now = booking.end_time
@@ -677,16 +677,13 @@ def test_booking_cannot_be_cancelled_at_its_end_time(make_lot, vehicle, spot):
         service.cancel(booking)
 
 
-def test_load_bookings_copies_the_supplied_list(vehicle, spot, make_lot):
+def test_bookings_property_returns_a_copy(vehicle, spot, make_lot):
     lot = make_lot(spot)
     start = at(9)
-    booking = ReservationService(clock=lambda: NOW).reserve(
-        request(lot, spot, vehicle, start, start + timedelta(hours=1))
-    )
-    bookings = [booking]
-    service = ReservationService(clock=lambda: NOW)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
+    booking = service.reserve(request(lot, spot, vehicle, start, start + timedelta(hours=1)))
+    bookings = service.bookings
 
-    service.load_bookings(bookings)
     bookings.clear()
 
     assert service.bookings == [booking]

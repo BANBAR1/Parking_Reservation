@@ -1,7 +1,10 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from pathlib import Path
+from typing import Protocol
 
+from parking_reservation import booking_file
 from parking_reservation.errors import (
     BookingCancellationError,
     BookingNotFoundError,
@@ -13,6 +16,7 @@ from parking_reservation.errors import (
 from parking_reservation.models import (
     Booking,
     BookingStatus,
+    LotCollection,
     LotStatus,
     ParkingLot,
     ParkingSpot,
@@ -20,6 +24,51 @@ from parking_reservation.models import (
 )
 from parking_reservation.pricing import rate_for, rule_for
 from parking_reservation.timekeeping import as_utc_from
+
+
+class BookingRepository(Protocol):
+    def all(self) -> list[Booking]: ...
+
+    def add(self, booking: Booking) -> None: ...
+
+    def update(self, booking: Booking) -> None: ...
+
+
+@dataclass
+class BookingFile:
+    path: Path
+    lots: LotCollection
+    _bookings: list[Booking] = field(default_factory=list[Booking], init=False)
+
+    def __post_init__(self) -> None:
+        try:
+            self._bookings: list[Booking] = booking_file.load(self.path, self.lots)
+        except FileNotFoundError:
+            self._bookings = []
+
+    def all(self) -> list[Booking]:
+        return self._bookings.copy()
+
+    def add(self, booking: Booking) -> None:
+        self._bookings.append(booking)
+        booking_file.save(self._bookings, self.path)
+
+    def update(self, booking: Booking) -> None:
+        booking_file.save(self._bookings, self.path)
+
+
+@dataclass
+class BookingMemory:
+    _bookings: list[Booking] = field(default_factory=list[Booking])
+
+    def all(self) -> list[Booking]:
+        return self._bookings.copy()
+
+    def add(self, booking: Booking) -> None:
+        self._bookings.append(booking)
+
+    def update(self, booking: Booking) -> None:
+        pass
 
 
 @dataclass(frozen=True)
@@ -38,12 +87,12 @@ class BookingRequest:
 
 @dataclass
 class ReservationService:
-    _bookings: list[Booking] = field(default_factory=list[Booking], init=False)
+    storage: BookingRepository
     clock: Callable[[], datetime] = lambda: datetime.now(UTC)
 
     @property
     def bookings(self) -> list[Booking]:
-        return self._bookings.copy()
+        return self.storage.all()
 
     def reserve(self, request: BookingRequest) -> Booking:
         lot = request.lot
@@ -66,23 +115,21 @@ class ReservationService:
         )
 
         self._validate_request(request)
-        self._bookings.append(booking)
+        self.storage.add(booking)
 
         return booking
 
     def cancel(self, booking: Booking) -> None:
-        for held_booking in self._bookings:
+        for held_booking in self.storage.all():
             if held_booking is booking:
                 if held_booking.status is BookingStatus.CANCELLED:
                     raise BookingCancellationError("Cannot cancel already cancelled booking")
                 if held_booking.end_time <= self.clock():
                     raise BookingCancellationError("Cannot cancel already completed booking")
                 held_booking.cancel()
+                self.storage.update(held_booking)
                 return
         raise BookingNotFoundError
-
-    def load_bookings(self, bookings: list[Booking]) -> None:
-        self._bookings = bookings.copy()
 
     def _validate_request(self, request: BookingRequest) -> None:
         lot = request.lot
@@ -102,7 +149,7 @@ class ReservationService:
 
         matched_bookings = [
             booking
-            for booking in self._bookings
+            for booking in self.storage.all()
             if spot is booking.spot and booking.status is not BookingStatus.CANCELLED
         ]
 
