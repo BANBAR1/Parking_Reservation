@@ -48,7 +48,6 @@ def main() -> None:
 
     service.cancel(booking)
     print(f"Bookings after cancellation: {len(service.bookings)}")
-    # booking_file.save(service.bookings, bookings_path)
 
 
 if __name__ == "__main__":
