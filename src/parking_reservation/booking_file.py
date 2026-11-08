@@ -1,4 +1,5 @@
 import json
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -52,3 +53,26 @@ def load(path: Path, lots: LotCollection) -> list[Booking]:
                 )
             )
     return bookings
+
+
+@dataclass
+class BookingFile:
+    path: Path
+    lots: LotCollection
+    _bookings: list[Booking] = field(default_factory=list[Booking], init=False)
+
+    def __post_init__(self) -> None:
+        try:
+            self._bookings: list[Booking] = load(self.path, self.lots)
+        except FileNotFoundError:
+            self._bookings = []
+
+    def all(self) -> list[Booking]:
+        return self._bookings.copy()
+
+    def add(self, booking: Booking) -> None:
+        self._bookings.append(booking)
+        save(self._bookings, self.path)
+
+    def update(self, booking: Booking) -> None:
+        save(self._bookings, self.path)

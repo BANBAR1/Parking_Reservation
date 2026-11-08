@@ -1,10 +1,8 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Protocol
 
-from parking_reservation import booking_file
 from parking_reservation.errors import (
     BookingCancellationError,
     BookingNotFoundError,
@@ -16,7 +14,6 @@ from parking_reservation.errors import (
 from parking_reservation.models import (
     Booking,
     BookingStatus,
-    LotCollection,
     LotStatus,
     ParkingLot,
     ParkingSpot,
@@ -32,29 +29,6 @@ class BookingRepository(Protocol):
     def add(self, booking: Booking) -> None: ...
 
     def update(self, booking: Booking) -> None: ...
-
-
-@dataclass
-class BookingFile:
-    path: Path
-    lots: LotCollection
-    _bookings: list[Booking] = field(default_factory=list[Booking], init=False)
-
-    def __post_init__(self) -> None:
-        try:
-            self._bookings: list[Booking] = booking_file.load(self.path, self.lots)
-        except FileNotFoundError:
-            self._bookings = []
-
-    def all(self) -> list[Booking]:
-        return self._bookings.copy()
-
-    def add(self, booking: Booking) -> None:
-        self._bookings.append(booking)
-        booking_file.save(self._bookings, self.path)
-
-    def update(self, booking: Booking) -> None:
-        booking_file.save(self._bookings, self.path)
 
 
 @dataclass

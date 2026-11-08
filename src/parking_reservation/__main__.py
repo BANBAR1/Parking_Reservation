@@ -2,9 +2,10 @@ from datetime import datetime
 from pathlib import Path
 
 from parking_reservation import seed
+from parking_reservation.booking_file import BookingFile
 from parking_reservation.errors import ReservationError
 from parking_reservation.models import Driver, LotCollection, SpotType, Vehicle
-from parking_reservation.reservation import BookingFile, BookingRequest, ReservationService
+from parking_reservation.reservation import BookingRequest, ReservationService
 
 
 def main() -> None:

@@ -5,6 +5,7 @@ from decimal import Decimal
 import pytest
 
 from parking_reservation import booking_file
+from parking_reservation.booking_file import BookingFile
 from parking_reservation.errors import (
     InvalidTimezoneError,
     SpotAlreadyBookedError,
@@ -13,7 +14,6 @@ from parking_reservation.errors import (
 from parking_reservation.models import Booking, BookingStatus, LotCollection, SpotType
 from parking_reservation.pricing import DEFAULT_HOURLY_RATES, rate_for
 from parking_reservation.reservation import (
-    BookingFile,
     BookingMemory,
     BookingRequest,
     ReservationService,
@@ -113,6 +113,21 @@ def test_first_start_with_missing_file_has_no_bookings(tmp_path, make_lot, spot)
     service = ReservationService(storage=BookingFile(path, lots))
 
     assert service.bookings == []
+
+
+def test_bookings_from_file_storage_are_a_copy(tmp_path, make_lot, spot, vehicle, location):
+    lot = make_lot(spot)
+    lots = LotCollection()
+    lots.add(lot)
+    path = tmp_path / "bookings.json"
+    now = datetime(2027, 3, 1, 8, 0, tzinfo=UTC)
+    start = datetime(2027, 3, 2, 9, 0, tzinfo=location.timezone)
+    service = ReservationService(storage=BookingFile(path, lots), clock=lambda: now)
+    booking = service.reserve(_request(lot, spot, vehicle, start))
+
+    service.bookings.clear()
+
+    assert service.bookings == [booking]
 
 
 def test_loaded_booking_blocks_overlapping_reservation(tmp_path, make_lot, spot, vehicle, location):
