@@ -7,7 +7,7 @@ name = "parking-reservation"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
-    "tzdata>=2026.5",
+    "tzdata>=2026.6",
 ]
 
 [tool.ruff]
