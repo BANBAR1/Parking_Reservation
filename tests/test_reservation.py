@@ -426,6 +426,20 @@ def test_second_free_spot_is_available_when_first_spot_is_booked(vehicle, spot, 
     assert second_booking.spot is second_spot
 
 
+def test_same_numbered_spots_in_different_lots_are_distinct(vehicle, spot, make_lot):
+    other_spot = ParkingSpot(number=spot.number, status=spot.status, type=spot.type)
+    first_lot = make_lot(spot)
+    second_lot = make_lot(other_spot, number=2)
+    service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)
+    start_time = at(9)
+    end_time = at(10)
+
+    assert other_spot not in first_lot.spots
+
+    service.reserve(request(first_lot, spot, vehicle, start_time, end_time))
+    service.reserve(request(second_lot, other_spot, vehicle, start_time, end_time))
+
+
 def test_cancelling_booking_makes_its_hours_bookable_again(vehicle, spot, make_lot):
     lot = make_lot(spot)
     service = ReservationService(storage=BookingMemory(), clock=lambda: NOW)

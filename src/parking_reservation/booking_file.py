@@ -4,6 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 from parking_reservation.models import Booking, BookingStatus, Driver, LotCollection, Vehicle
 
@@ -22,6 +23,7 @@ def save(bookings: list[Booking], path: Path) -> None:
             "hourly_rate": str(booking.hourly_rate),
             "total": str(booking.total),
             "status": booking.status.value,
+            "id": str(booking.id),
         }
         for booking in bookings
     ]
@@ -50,6 +52,7 @@ def load(path: Path, lots: LotCollection) -> list[Booking]:
                     hourly_rate=Decimal(booking["hourly_rate"]),
                     total=Decimal(booking["total"]),
                     status=BookingStatus(booking["status"]),
+                    id=UUID(booking["id"]),
                 )
             )
     return bookings

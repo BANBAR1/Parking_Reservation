@@ -6,7 +6,11 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from parking_reservation import seed
-from parking_reservation.errors import DuplicateLotNumberError, LotNotFoundError
+from parking_reservation.errors import (
+    DuplicateLotIdError,
+    DuplicateLotNumberError,
+    LotNotFoundError,
+)
 from parking_reservation.models import (
     Location,
     LocationType,
@@ -78,6 +82,33 @@ def test_adding_duplicate_lot_raises_error():
         match="Lot with number: 8 already exists in this collection",
     ):
         collection.add(duplicate_lot)
+
+
+def test_adding_copy_of_lot_with_new_number_raises_duplicate_id_error():
+    collection = LotCollection()
+    lot = ParkingLot(
+        number=8,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=Location(
+            type=LocationType.RESIDENTIAL,
+            address="Washington",
+            timezone=ZoneInfo("America/New_York"),
+        ),
+    )
+    copied_lot = ParkingLot(
+        number=9,
+        status=LotStatus.CLOSED,
+        type=LotType.PRIVATE,
+        location=lot.location,
+        id=lot.id,
+    )
+    collection.add(lot)
+
+    with pytest.raises(DuplicateLotIdError):
+        collection.add(copied_lot)
+
+    assert collection.get(lot.number) is lot
 
 
 def test_lots_returns_a_copy():

@@ -95,7 +95,7 @@ class ReservationService:
 
     def cancel(self, booking: Booking) -> None:
         for held_booking in self.storage.all():
-            if held_booking is booking:
+            if held_booking.id == booking.id:
                 if held_booking.status is BookingStatus.CANCELLED:
                     raise BookingCancellationError("Cannot cancel already cancelled booking")
                 if held_booking.end_time <= self.clock():
@@ -115,7 +115,7 @@ class ReservationService:
         if lot.status is not LotStatus.OPEN:
             raise LotIsNotOpenError
 
-        if not any(available_spot is spot for available_spot in lot.available_spots):
+        if not any(available_spot.id == spot.id for available_spot in lot.available_spots):
             raise SpotOutOfServiceError
 
         if start_time < date_now:
@@ -124,7 +124,7 @@ class ReservationService:
         matched_bookings = [
             booking
             for booking in self.storage.all()
-            if spot is booking.spot and booking.status is not BookingStatus.CANCELLED
+            if spot.id == booking.spot.id and booking.status is not BookingStatus.CANCELLED
         ]
 
         for booking in matched_bookings:

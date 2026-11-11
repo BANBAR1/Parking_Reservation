@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
+from uuid import UUID, uuid4
 
 from parking_reservation.errors import (
     ReversedBookingTimeError,
@@ -37,6 +38,7 @@ class Booking:
     hourly_rate: Decimal
     total: Decimal
     status: BookingStatus = field(default=BookingStatus.ACTIVE)
+    id: UUID = field(default_factory=uuid4)
 
     def __post_init__(self) -> None:
         self.start_time = as_utc(self.start_time, "start_time")
@@ -45,8 +47,11 @@ class Booking:
         if self.end_time <= self.start_time:
             raise ReversedBookingTimeError
 
-        if not any(lot_spot is self.spot for lot_spot in self.lot.spots):
+        if self.spot not in self.lot.spots:
             raise SpotIsNotInGivenLotError
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Booking) and other.id == self.id
 
     def duration_hours(self) -> Decimal:
         return get_hours(self.end_time - self.start_time)
