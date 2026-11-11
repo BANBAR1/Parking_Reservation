@@ -434,7 +434,8 @@ def test_same_numbered_spots_in_different_lots_are_distinct(vehicle, spot, make_
     start_time = at(9)
     end_time = at(10)
 
-    assert other_spot not in first_lot.spots
+    with pytest.raises(SpotIsNotInGivenLotError):
+        service.reserve(request(first_lot, other_spot, vehicle, start_time, end_time))
 
     service.reserve(request(first_lot, spot, vehicle, start_time, end_time))
     service.reserve(request(second_lot, other_spot, vehicle, start_time, end_time))
