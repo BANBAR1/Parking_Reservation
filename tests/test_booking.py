@@ -1,6 +1,7 @@
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 from datetime import datetime, timedelta
 from decimal import Decimal
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -298,3 +299,23 @@ def test_booking_status_changes_when_cancelled(location, vehicle, make_lot, spot
     booking.cancel()
 
     assert booking.status is BookingStatus.CANCELLED
+
+
+def test_bookings_with_same_id_are_equal_and_bookings_with_new_ids_are_not(
+    location, vehicle, make_lot, spot
+):
+    start = datetime(2027, 3, 1, 10, 0, tzinfo=location.timezone)
+    booking = Booking(
+        lot=make_lot(spot),
+        spot=spot,
+        vehicle=vehicle,
+        start_time=start,
+        end_time=start + timedelta(hours=1),
+        hourly_rate=rate_for(spot.type),
+        total=_calculate_total(spot.type, timedelta(hours=1)),
+    )
+    same_id_with_changed_data = replace(booking, total=booking.total + Decimal("1.00"))
+    same_data_with_new_id = replace(booking, id=uuid4())
+
+    assert same_id_with_changed_data == booking
+    assert same_data_with_new_id != booking

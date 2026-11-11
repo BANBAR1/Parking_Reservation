@@ -7,6 +7,7 @@ import pytest
 from parking_reservation import booking_file
 from parking_reservation.booking_file import BookingFile
 from parking_reservation.errors import (
+    BookingCancellationError,
     InvalidTimezoneError,
     SpotAlreadyBookedError,
     SpotNotFoundError,
@@ -46,7 +47,7 @@ def test_load_returns_equal_bookings_referencing_existing_lot_and_spot(
     booking_file.save(service.bookings, path)
     loaded = booking_file.load(path, lots)
 
-    assert loaded == [booking]
+    assert [vars(loaded_booking) for loaded_booking in loaded] == [vars(booking)]
     assert loaded[0].lot is lot
     assert loaded[0].spot is spot
 
@@ -83,7 +84,9 @@ def test_reserve_saves_booking_to_file(tmp_path, make_lot, spot, vehicle, locati
     booking = service.reserve(_request(lot, spot, vehicle, start))
     restored_service = ReservationService(storage=BookingFile(path, lots), clock=lambda: now)
 
-    assert restored_service.bookings == [booking]
+    assert [vars(restored_booking) for restored_booking in restored_service.bookings] == [
+        vars(booking)
+    ]
 
 
 def test_refused_reservation_does_not_change_file(tmp_path, make_lot, spot, vehicle, location):
@@ -165,6 +168,42 @@ def test_load_restores_cancelled_status_and_allows_rebooking(
     restored_service.reserve(_request(lot, spot, vehicle, start))
 
 
+def test_booking_from_before_a_restart_can_be_cancelled(
+    tmp_path, make_lot, spot, vehicle, location
+):
+    lot = make_lot(spot)
+    lots = LotCollection()
+    lots.add(lot)
+    path = tmp_path / "bookings.json"
+    now = datetime(2027, 3, 1, 8, 0, tzinfo=UTC)
+    start = datetime(2027, 3, 2, 9, 0, tzinfo=location.timezone)
+    service = ReservationService(storage=BookingFile(path, lots), clock=lambda: now)
+    booking = service.reserve(_request(lot, spot, vehicle, start))
+    restarted = ReservationService(storage=BookingFile(path, lots), clock=lambda: now)
+
+    restarted.cancel(booking)
+
+    assert booking_file.load(path, lots)[0].status is BookingStatus.CANCELLED
+
+
+def test_booking_cancelled_after_a_restart_cannot_be_cancelled_again(
+    tmp_path, make_lot, spot, vehicle, location
+):
+    lot = make_lot(spot)
+    lots = LotCollection()
+    lots.add(lot)
+    path = tmp_path / "bookings.json"
+    now = datetime(2027, 3, 1, 8, 0, tzinfo=UTC)
+    start = datetime(2027, 3, 2, 9, 0, tzinfo=location.timezone)
+    service = ReservationService(storage=BookingFile(path, lots), clock=lambda: now)
+    booking = service.reserve(_request(lot, spot, vehicle, start))
+    restarted = ReservationService(storage=BookingFile(path, lots), clock=lambda: now)
+    restarted.cancel(booking)
+
+    with pytest.raises(BookingCancellationError, match="Cannot cancel already cancelled booking"):
+        restarted.cancel(booking)
+
+
 def test_load_restores_past_booking_without_reserving(tmp_path, make_lot, spot, vehicle, location):
     lot = make_lot(spot)
     lots = LotCollection()
@@ -183,7 +222,7 @@ def test_load_restores_past_booking_without_reserving(tmp_path, make_lot, spot, 
     booking_file.save([booking], path)
 
     service = ReservationService(storage=BookingFile(path, lots))
-    assert service.bookings == [booking]
+    assert [vars(service_booking) for service_booking in service.bookings] == [vars(booking)]
 
 
 def test_load_preserves_saved_total_after_rate_change(

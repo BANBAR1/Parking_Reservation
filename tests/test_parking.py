@@ -1,6 +1,9 @@
+from dataclasses import replace
+from uuid import uuid4
+
 import pytest
 
-from parking_reservation.errors import DuplicateSpotNumberError
+from parking_reservation.errors import DuplicateSpotIdError, DuplicateSpotNumberError
 from parking_reservation.models import (
     LotStatus,
     LotType,
@@ -144,6 +147,55 @@ def test_adding_spot_with_same_number_raises_error(location):
 
     with pytest.raises(DuplicateSpotNumberError):
         lot.add_spot(spot2)
+
+
+def test_spots_with_same_id_are_equal_and_spots_with_new_ids_are_not(spot):
+    same_id_with_changed_data = replace(spot, number=2)
+    same_data_with_new_id = replace(spot, id=uuid4())
+
+    assert same_id_with_changed_data == spot
+    assert same_data_with_new_id != spot
+
+
+def test_lots_with_same_id_are_equal_and_lots_with_new_ids_are_not(location):
+    lot = ParkingLot(number=1, status=LotStatus.OPEN, type=LotType.PUBLIC, location=location)
+    same_id_with_changed_data = ParkingLot(
+        number=2,
+        status=LotStatus.CLOSED,
+        type=LotType.PRIVATE,
+        location=location,
+        id=lot.id,
+    )
+    same_data_with_new_id = ParkingLot(
+        number=lot.number,
+        status=lot.status,
+        type=lot.type,
+        location=lot.location,
+    )
+
+    assert same_id_with_changed_data == lot
+    assert same_data_with_new_id != lot
+
+
+def test_adding_copy_of_spot_with_new_number_raises_duplicate_id_error(location, spot):
+    lot = ParkingLot(
+        number=1,
+        status=LotStatus.OPEN,
+        type=LotType.PUBLIC,
+        location=location,
+        spots=[spot],
+    )
+    copied_spot = ParkingSpot(
+        number=2,
+        status=spot.status,
+        type=spot.type,
+        id=spot.id,
+    )
+
+    with pytest.raises(DuplicateSpotIdError):
+        lot.add_spot(copied_spot)
+
+    assert lot.spots == [spot]
 
 
 def test_spot_with_unused_number_accepted(location):

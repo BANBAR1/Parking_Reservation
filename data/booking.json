@@ -10,32 +10,21 @@
         "end_time": "2127-09-20T04:20:00+00:00",
         "hourly_rate": "1.00",
         "total": "0.34",
-        "status": "CANCELLED"
+        "status": "CANCELLED",
+        "id": "51ba5cff-bf67-45b3-b809-55609c4a5990"
     },
     {
-        "lot": 74,
+        "lot": 63,
         "spot": 1,
         "vehicle": {
-            "license_plate": "WZ12346",
+            "license_plate": "WZ12345",
             "driver": "Andrii"
         },
-        "start_time": "2127-09-20T16:00:00+00:00",
-        "end_time": "2127-09-20T18:00:00+00:00",
-        "hourly_rate": "2.50",
-        "total": "5.00",
-        "status": "ACTIVE"
-    },
-    {
-        "lot": 74,
-        "spot": 2,
-        "vehicle": {
-            "license_plate": "WZ12347",
-            "driver": "Andrii"
-        },
-        "start_time": "2127-09-20T16:00:00+00:00",
-        "end_time": "2127-09-20T18:00:00+00:00",
-        "hourly_rate": "3.50",
-        "total": "7.00",
-        "status": "ACTIVE"
+        "start_time": "2127-09-20T04:00:00+00:00",
+        "end_time": "2127-09-20T04:20:00+00:00",
+        "hourly_rate": "1.00",
+        "total": "0.34",
+        "status": "CANCELLED",
+        "id": "6a5e9c9b-664e-4513-bd43-48c3975095ea"
     }
 ]

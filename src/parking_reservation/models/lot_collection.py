@@ -1,6 +1,10 @@
 from dataclasses import dataclass, field
 
-from parking_reservation.errors import DuplicateLotNumberError, LotNotFoundError
+from parking_reservation.errors import (
+    DuplicateLotIdError,
+    DuplicateLotNumberError,
+    LotNotFoundError,
+)
 from parking_reservation.models.parking import ParkingLot
 
 
@@ -16,6 +20,8 @@ class LotCollection:
             raise DuplicateLotNumberError(
                 f"Lot with number: {lot.number} already exists in this collection"
             )
+        if any(lot.id == stored_lot.id for stored_lot in self._lots.values()):
+            raise DuplicateLotIdError(f"Lot with id: {lot.id} already exists in this collection")
 
         self._lots[lot.number] = lot
 

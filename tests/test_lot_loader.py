@@ -156,7 +156,9 @@ def test_as_dict_func_raises_error():
 def test_load_rejects_duplicate_spot_numbers():
     path = Path(__file__).parent / "fixtures" / "duplicate_spot_number_lot.json"
 
-    with pytest.raises(DuplicateSpotNumberError, match="Spot with given number already exists"):
+    with pytest.raises(
+        DuplicateSpotNumberError, match="Spot with number: 3 already exists in lot number: 32"
+    ):
         seed.load(path)
 
 

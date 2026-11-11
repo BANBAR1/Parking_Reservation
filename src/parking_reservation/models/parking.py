@@ -1,8 +1,13 @@
 from dataclasses import dataclass, field
 from enum import Enum
+from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
-from parking_reservation.errors import DuplicateSpotNumberError, SpotNotFoundError
+from parking_reservation.errors import (
+    DuplicateSpotIdError,
+    DuplicateSpotNumberError,
+    SpotNotFoundError,
+)
 
 
 class SpotType(Enum):
@@ -25,6 +30,10 @@ class ParkingSpot:
     status: SpotStatus
     type: SpotType
     floor: int | None = None
+    id: UUID = field(default_factory=uuid4)
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, ParkingSpot) and other.id == self.id
 
 
 class LocationType(Enum):
@@ -60,7 +69,8 @@ class ParkingLot:
     status: LotStatus
     type: LotType
     location: Location
-    _spots: list[ParkingSpot] = field(default_factory=list[ParkingSpot])
+    _spots: list[ParkingSpot] = field(default_factory=list[ParkingSpot], init=False)
+    id: UUID = field(default_factory=uuid4)
 
     def __init__(
         self,
@@ -69,15 +79,20 @@ class ParkingLot:
         type: LotType,
         location: Location,
         spots: list[ParkingSpot] | None = None,
+        id: UUID | None = None,
     ) -> None:
         self.number = number
         self.status = status
         self.type = type
         self.location = location
         self._spots = []
+        self.id = id if id is not None else uuid4()
         if spots is not None:
             for spot in spots:
                 self.add_spot(spot)
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, ParkingLot) and other.id == self.id
 
     @property
     def spots(self) -> list[ParkingSpot]:
@@ -94,7 +109,14 @@ class ParkingLot:
     def add_spot(self, spot: ParkingSpot) -> None:
 
         if any(lot_spot.number == spot.number for lot_spot in self._spots):
-            raise DuplicateSpotNumberError
+            raise DuplicateSpotNumberError(
+                f"Spot with number: {spot.number} already exists in lot number: {self.number}"
+            )
+
+        if any(lot_spot.id == spot.id for lot_spot in self._spots):
+            raise DuplicateSpotIdError(
+                f"Spot with id: {spot.id} already exists in lot number: {self.number}"
+            )
 
         self._spots.append(spot)
 
