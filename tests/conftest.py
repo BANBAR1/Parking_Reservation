@@ -1,5 +1,7 @@
+import os
 from zoneinfo import ZoneInfo
 
+import psycopg
 import pytest
 
 from parking_reservation.models import (
@@ -16,6 +18,7 @@ from parking_reservation.models import (
 )
 
 OSLO = ZoneInfo("Europe/Oslo")
+DEFAULT_DATABASE_URL = "postgresql://roman:iamdamngood@localhost:5432/parking"
 
 
 @pytest.fixture
@@ -51,3 +54,14 @@ def make_lot(request):
         )
 
     return make
+
+
+@pytest.fixture
+def database_url():
+    return os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
+
+
+@pytest.fixture
+def connection(database_url):
+    with psycopg.connect(database_url, autocommit=True, connect_timeout=5) as connection:
+        yield connection

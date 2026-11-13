@@ -8,12 +8,14 @@ A learning project: a small Python app that models parking lots, spots and booki
 
 - Python 3.12
 - [uv](https://docs.astral.sh/uv/getting-started/installation/)
+- [Docker Desktop](https://docs.docker.com/get-started/get-docker/)
 
 ## Setup
 
 ```bash
 uv sync
 uv run pre-commit install
+docker compose up -d --wait
 ```
 
 ## Run
@@ -25,8 +27,11 @@ uv run python -m parking_reservation
 ## Test
 
 ```bash
-uv run pytest
+docker compose up -d --wait
+make check
 ```
+
+`make check` requires the PostgreSQL database to be running. The command above starts it and waits until it is ready.
 
 ## Project layout
 
