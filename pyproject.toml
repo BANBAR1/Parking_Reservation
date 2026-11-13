@@ -8,6 +8,7 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "tzdata>=2026.6",
+    "psycopg[binary]",
 ]
 
 [tool.ruff]
