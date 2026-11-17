@@ -1,8 +1,9 @@
+import os
 from datetime import datetime
 from pathlib import Path
 
 from parking_reservation import seed
-from parking_reservation.booking_file import BookingFile
+from parking_reservation.booking_database import BookingDatabase
 from parking_reservation.errors import ReservationError
 from parking_reservation.models import Driver, LotCollection, SpotType, Vehicle
 from parking_reservation.reservation import BookingRequest, ReservationService
@@ -10,7 +11,6 @@ from parking_reservation.reservation import BookingRequest, ReservationService
 
 def main() -> None:
     lot_path = Path(__file__).resolve().parents[2] / "data" / "parking_lot.json"
-    bookings_path = Path(__file__).resolve().parents[2] / "data" / "booking.json"
     lots = LotCollection()
     for lot in seed.load(lot_path):
         lots.add(lot)
@@ -24,7 +24,8 @@ def main() -> None:
 
     driver = Driver(name="Andrii")
     vehicle = Vehicle(license_plate="WZ12345", driver=driver)
-    service = ReservationService(storage=BookingFile(bookings_path, lots))
+    database_url = os.environ["DATABASE_URL"]
+    service = ReservationService(storage=BookingDatabase(database_url, lots))
     print(f"Restored bookings: {len(service.bookings)}")
     start_time = datetime(2127, 9, 20, 0, 0, tzinfo=lot.location.timezone)
     end_time = datetime(2127, 9, 20, 0, 20, tzinfo=lot.location.timezone)
