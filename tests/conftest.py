@@ -1,8 +1,8 @@
-import os
 from zoneinfo import ZoneInfo
 
 import psycopg
 import pytest
+from testcontainers.community.postgres import PostgresContainer
 
 from parking_reservation.models import (
     Driver,
@@ -18,7 +18,6 @@ from parking_reservation.models import (
 )
 
 OSLO = ZoneInfo("Europe/Oslo")
-DEFAULT_DATABASE_URL = "postgresql://roman:iamdamngood@localhost:5432/parking"
 
 
 @pytest.fixture
@@ -56,9 +55,10 @@ def make_lot(request):
     return make
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def database_url():
-    return os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
+    with PostgresContainer("postgres:18.6", driver=None) as postgres:
+        yield postgres.get_connection_url()
 
 
 @pytest.fixture

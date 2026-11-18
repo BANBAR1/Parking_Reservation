@@ -15,23 +15,38 @@ A learning project: a small Python app that models parking lots, spots and booki
 ```bash
 uv sync
 uv run pre-commit install
-docker compose up -d --wait
 ```
 
 ## Run
 
 ```bash
+make db-up
 uv run python -m parking_reservation
 ```
+
+`make db-up` starts the app's PostgreSQL database and waits until it is ready. The app uses the database from `compose.yaml` by default.
+
+`DATABASE_URL` can point the app at a different PostgreSQL database:
+
+```bash
+DATABASE_URL=postgresql://user:password@host:5432/database uv run python -m parking_reservation
+```
+
+Stop the app's database when finished:
+
+```bash
+make db-down
+```
+
+`make db-down` stops the database without deleting its stored data.
 
 ## Test
 
 ```bash
-docker compose up -d --wait
 make check
 ```
 
-`make check` requires the PostgreSQL database to be running. The command above starts it and waits until it is ready.
+The tests need Docker running. They start and remove their own PostgreSQL container, so they do not use or change the app's database. The app's database may be stopped when running the tests.
 
 ## Project layout
 
