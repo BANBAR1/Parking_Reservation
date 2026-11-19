@@ -1,4 +1,4 @@
-.PHONY: install fmt lint test check
+.PHONY: install fmt lint test check db-down db-up
 
 install:
 	uv sync --locked
@@ -11,6 +11,12 @@ lint:
 
 test:
 	uv run pytest
+
+db-up:
+	docker compose up -d --wait
+
+db-down:
+	docker compose down
 
 check:
 	uv run ruff format --check .

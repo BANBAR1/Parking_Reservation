@@ -1,9 +1,9 @@
-import os
 from datetime import datetime
 from pathlib import Path
 
 from parking_reservation import seed
 from parking_reservation.booking_database import BookingDatabase
+from parking_reservation.config import database_url
 from parking_reservation.errors import ReservationError
 from parking_reservation.models import Driver, LotCollection, SpotType, Vehicle
 from parking_reservation.reservation import BookingRequest, ReservationService
@@ -24,8 +24,7 @@ def main() -> None:
 
     driver = Driver(name="Andrii")
     vehicle = Vehicle(license_plate="WZ12345", driver=driver)
-    database_url = os.environ["DATABASE_URL"]
-    service = ReservationService(storage=BookingDatabase(database_url, lots))
+    service = ReservationService(storage=BookingDatabase(database_url(), lots))
     print(f"Restored bookings: {len(service.bookings)}")
     start_time = datetime(2127, 9, 20, 0, 0, tzinfo=lot.location.timezone)
     end_time = datetime(2127, 9, 20, 0, 20, tzinfo=lot.location.timezone)
