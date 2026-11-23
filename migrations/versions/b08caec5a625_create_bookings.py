@@ -1,7 +1,3 @@
-from collections.abc import Sequence
-
-from alembic import op
-
 """create bookings
 
 Revision ID: b08caec5a625
@@ -10,6 +6,9 @@ Create Date: 2026-11-22 20:35:26.386313
 
 """
 
+from collections.abc import Sequence
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "b08caec5a625"
