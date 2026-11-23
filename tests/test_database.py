@@ -3,6 +3,8 @@ from decimal import Decimal
 
 import psycopg
 import pytest
+from alembic import command
+from alembic.config import Config
 
 from parking_reservation.booking_database import BookingDatabase
 from parking_reservation.errors import SpotAlreadyBookedError
@@ -23,8 +25,8 @@ BOOKING_START = datetime(2027, 3, 2, 8, tzinfo=UTC)
 
 
 @pytest.fixture(autouse=True)
-def drop_bookings_table(connection):
-    connection.execute("DROP TABLE IF EXISTS bookings")
+def clear_bookings_table(connection):
+    connection.execute("TRUNCATE TABLE bookings")
 
 
 @pytest.fixture
@@ -155,3 +157,14 @@ def test_adding_the_same_booking_twice_is_rejected(make_storage, lots, vehicle, 
         storage.add(booking)
 
     assert len(storage.all()) == 1
+
+
+def test_migration_downgrades_and_upgrades(connection, database_url):
+    config = Config("alembic.ini")
+    config.attributes["database_url"] = database_url
+
+    command.downgrade(config, "base")
+    assert connection.execute("SELECT to_regclass('public.bookings')").fetchone() == (None,)
+
+    command.upgrade(config, "head")
+    assert connection.execute("SELECT to_regclass('public.bookings')").fetchone() == ("bookings",)
