@@ -21,10 +21,20 @@ uv run pre-commit install
 
 ```bash
 make db-up
+make db-migrate
 uv run python -m parking_reservation
 ```
 
-`make db-up` starts the app's PostgreSQL database and waits until it is ready. The app uses the database from `compose.yaml` by default.
+`make db-up` starts the app's PostgreSQL database and waits until it is ready. `make db-migrate` applies pending schema migrations before the app uses the database. The app uses the database from `compose.yaml` by default.
+
+Run `make db-migrate` again whenever a new migration is added.
+
+To change the database schema, create a migration and apply it:
+
+```bash
+uv run alembic revision -m "describe the schema change"
+make db-migrate
+```
 
 `DATABASE_URL` can point the app at a different PostgreSQL database:
 

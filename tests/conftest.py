@@ -2,6 +2,8 @@ from zoneinfo import ZoneInfo
 
 import psycopg
 import pytest
+from alembic import command
+from alembic.config import Config
 from testcontainers.community.postgres import PostgresContainer
 
 from parking_reservation.models import (
@@ -58,7 +60,11 @@ def make_lot(request):
 @pytest.fixture(scope="session")
 def database_url():
     with PostgresContainer("postgres:18.6", driver=None) as postgres:
-        yield postgres.get_connection_url()
+        url = postgres.get_connection_url()
+        config = Config("alembic.ini")
+        config.attributes["database_url"] = url
+        command.upgrade(config, "head")
+        yield url
 
 
 @pytest.fixture

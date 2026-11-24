@@ -13,22 +13,6 @@ class BookingDatabase:
 
     def __post_init__(self) -> None:
         self._connection = psycopg.connect(self.database_url, autocommit=True)
-        self._connection.execute(
-            """
-            CREATE TABLE IF NOT EXISTS bookings (
-                id UUID PRIMARY KEY,
-                lot INTEGER NOT NULL,
-                spot INTEGER NOT NULL,
-                license_plate TEXT NOT NULL,
-                driver TEXT NOT NULL,
-                start_time TIMESTAMPTZ NOT NULL,
-                end_time TIMESTAMPTZ NOT NULL,
-                hourly_rate NUMERIC(10, 2) NOT NULL,
-                total NUMERIC(10, 2) NOT NULL,
-                status TEXT NOT NULL
-            )
-            """
-        )
 
     def all(self) -> list[Booking]:
         rows = self._connection.execute("""

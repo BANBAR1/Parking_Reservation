@@ -1,4 +1,4 @@
-.PHONY: install fmt lint test check db-down db-up
+.PHONY: install fmt lint test check db-down db-up db-migrate
 
 install:
 	uv sync --locked
@@ -17,6 +17,9 @@ db-up:
 
 db-down:
 	docker compose down
+
+db-migrate:
+	uv run alembic upgrade head
 
 check:
 	uv run ruff format --check .
